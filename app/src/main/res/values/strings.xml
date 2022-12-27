@@ -12,4 +12,5 @@
     <string name="homeserver_url">Homeserver URL</string>
     <string name="username">Username</string>
     <string name="save">Save</string>
+    <string name="connect">Connect</string>
 </resources>

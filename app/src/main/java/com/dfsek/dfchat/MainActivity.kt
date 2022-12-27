@@ -11,6 +11,8 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import android.view.Menu
 import android.view.MenuItem
 import com.dfsek.dfchat.databinding.ActivityMainBinding
+import androidx.activity.compose.setContent
+import androidx.compose.material.Text
 
 class MainActivity : AppCompatActivity() {
 
@@ -19,6 +21,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContent {
+
+        }
 
 
         binding = ActivityMainBinding.inflate(layoutInflater)
