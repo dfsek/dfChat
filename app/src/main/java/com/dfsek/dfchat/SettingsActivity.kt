@@ -19,39 +19,6 @@ class SettingsActivity : AppCompatActivity() {
         setContent {
             settings()
         }
-        /*
-                val mediaStore = InMemoryMediaStore()
-
-                val repositoriesModule = createInMemoryRepositoriesModule()
-
-                val coroutineScope = CoroutineScope(Dispatchers.Default)
-
-
-                setContentView(binding.root)
-                binding.save.setOnClickListener {
-                    coroutineScope.launch {
-                        try {
-                            val matrixClient = MatrixClient.login(
-                                baseUrl = Url(binding.homeserver.text.toString()),
-                                identifier = IdentifierType.User(binding.username.text.toString()),
-                                passwordOrToken = binding.password.text.toString(),
-                                repositoriesModule = repositoriesModule,
-                                mediaStore = mediaStore,
-                                scope = coroutineScope
-                            ).getOrThrow()
-
-                            matrixClient.startSync()
-                        } catch (e: MatrixServerException) {
-                            runOnUiThread {
-                                binding.error.text = e.message
-                            }
-                            return@launch
-                        }
-                        finish()
-                    }
-                }
-
-                 */
     }
 
     @Composable
@@ -69,6 +36,7 @@ class SettingsActivity : AppCompatActivity() {
     fun account() {
         Row(modifier = Modifier.clickable {
             startActivity(Intent(applicationContext, AccountActivity::class.java))
+            finish()
         }) {
             Text("Account", fontSize = 30.sp)
         }

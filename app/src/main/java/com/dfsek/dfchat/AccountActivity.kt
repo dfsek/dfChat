@@ -64,12 +64,10 @@ class AccountActivity : AppCompatActivity() {
                         scope = coroutineScope
                     ).getOrThrow().also {
                         it.startSync()
-                        it.room.getAll()
-                            .onEach {
-                                it.forEach { roomId, _ ->
-                                    Log.d("Room", roomId.full)
-                                }
-                            }.collect()
+                        runOnUiThread {
+                            startActivity(Intent(applicationContext, AccountActivity::class.java))
+                            finish()
+                        }
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -164,7 +162,7 @@ class AccountActivity : AppCompatActivity() {
 
     companion object {
         @JvmStatic
-        lateinit var matrixClient: MatrixClient
+        var matrixClient: MatrixClient? = null
             private set
         fun redirectIntent(context: Context, data: Uri?): Intent {
             return Intent(context, AccountActivity::class.java).apply {
