@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Column
@@ -123,7 +124,7 @@ class AccountActivity : AppCompatActivity() {
                 }) {
                 Button(
                     onClick = {
-
+                        Toast.makeText(this@AccountActivity, "Not implemented", Toast.LENGTH_SHORT).show()
                     }
                 ) {
                     Text("Sign in with Username")
