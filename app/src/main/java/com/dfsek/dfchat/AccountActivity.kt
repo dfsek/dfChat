@@ -65,7 +65,7 @@ class AccountActivity : AppCompatActivity() {
                     ).getOrThrow().also {
                         it.startSync()
                         runOnUiThread {
-                            startActivity(Intent(applicationContext, AccountActivity::class.java))
+                            startActivity(Intent(applicationContext, MainActivity::class.java))
                             finish()
                         }
                     }

@@ -59,6 +59,7 @@ dependencies {
     implementation("io.ktor:ktor-client-android:2.2.1")
     implementation("androidx.browser:browser:1.4.0")
     implementation("io.arrow-kt:arrow-core:1.1.3")
+    implementation("io.coil-kt:coil-compose:2.2.2")
 
     val composeBom = platform("androidx.compose:compose-bom:2022.12.00")
     implementation (composeBom)

@@ -35,7 +35,13 @@ class MainActivity : AppCompatActivity() {
                 val allRooms = remember { mutableStateOf(emptyMap<RoomId, Room?>()) }
                 SettingsDropdown()
                 AllRooms(allRooms.value.values.stream().map {
-                    it?.name.toString()
+                    if(it?.name?.explicitName != null) {
+                        it.name!!.explicitName as String
+                    } else if(it?.name?.heroes?.isNotEmpty() == true) {
+                        it.name!!.heroes[0].full as String
+                    } else {
+                        it?.name.toString()
+                    }
                 }.toList())
                 Log.i("Main", "Refreshing rooms")
                 LaunchedEffect(AccountActivity.matrixClient) {
