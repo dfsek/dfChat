@@ -49,14 +49,16 @@ fun trixnity(module: String, version: String = trixnityVersion) =
 
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.7.0")
-    implementation("androidx.appcompat:appcompat:1.4.1")
-    implementation("com.google.android.material:material:1.5.0")
-    implementation("androidx.constraintlayout:constraintlayout:2.1.3")
-    implementation("androidx.navigation:navigation-fragment-ktx:2.4.1")
-    implementation("androidx.navigation:navigation-ui-ktx:2.4.1")
+    implementation("androidx.core:core-ktx:1.9.0")
+    implementation("androidx.appcompat:appcompat:1.5.1")
+    implementation("com.google.android.material:material:1.7.0")
+    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    implementation("androidx.navigation:navigation-fragment-ktx:2.5.3")
+    implementation("androidx.navigation:navigation-ui-ktx:2.5.3")
     implementation(trixnity("client"))
     implementation("io.ktor:ktor-client-android:2.2.1")
+    implementation("androidx.browser:browser:1.4.0")
+    implementation("io.arrow-kt:arrow-core:1.1.3")
 
     val composeBom = platform("androidx.compose:compose-bom:2022.12.00")
     implementation (composeBom)

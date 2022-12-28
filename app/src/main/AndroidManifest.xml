@@ -21,7 +21,6 @@
                 android:theme="@style/Theme.DfChat.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
-
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
 
@@ -33,11 +32,6 @@
                 android:name=".SettingsActivity"
                 android:exported="true"
                 android:theme="@style/Theme.DfChat.NoActionBar">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
 
             <meta-data
                     android:name="android.app.lib_name"
@@ -47,10 +41,20 @@
                 android:name=".AccountActivity"
                 android:exported="true"
                 android:theme="@style/Theme.DfChat.NoActionBar">
+            <meta-data
+                    android:name="android.app.lib_name"
+                    android:value=""/>
+        </activity>
+        <activity
+                android:name=".login.SSORedirectRouterActivity"
+                android:exported="true"
+                android:theme="@style/Theme.DfChat.NoActionBar">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="dfchat"
+                      android:host="login" />
             </intent-filter>
 
             <meta-data
