@@ -1,56 +1,76 @@
 package com.dfsek.dfchat
 
+import android.content.Intent
 import android.os.Bundle
+import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import com.dfsek.dfchat.databinding.ActivitySettingsBinding
-import io.ktor.http.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import net.folivo.trixnity.client.MatrixClient
-import net.folivo.trixnity.client.login
-import net.folivo.trixnity.client.media.InMemoryMediaStore
-import net.folivo.trixnity.client.store.repository.createInMemoryRepositoriesModule
-import net.folivo.trixnity.clientserverapi.model.authentication.IdentifierType
-import net.folivo.trixnity.core.MatrixServerException
-import org.koin.dsl.module
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.*
+import androidx.compose.ui.Modifier
 
 class SettingsActivity : AppCompatActivity() {
-    private lateinit var binding: ActivitySettingsBinding
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContent {
+            settings()
+        }
+        /*
+                val mediaStore = InMemoryMediaStore()
 
-        val mediaStore = InMemoryMediaStore()
+                val repositoriesModule = createInMemoryRepositoriesModule()
 
-        val repositoriesModule = createInMemoryRepositoriesModule()
+                val coroutineScope = CoroutineScope(Dispatchers.Default)
 
-        val coroutineScope = CoroutineScope(Dispatchers.Default)
 
-        binding = ActivitySettingsBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        binding.save.setOnClickListener {
-            coroutineScope.launch {
-                try {
-                    val matrixClient = MatrixClient.login(
-                        baseUrl = Url(binding.homeserver.text.toString()),
-                        identifier = IdentifierType.User(binding.username.text.toString()),
-                        passwordOrToken = binding.password.text.toString(),
-                        repositoriesModule = repositoriesModule,
-                        mediaStore = mediaStore,
-                        scope = coroutineScope
-                    ).getOrThrow()
+                setContentView(binding.root)
+                binding.save.setOnClickListener {
+                    coroutineScope.launch {
+                        try {
+                            val matrixClient = MatrixClient.login(
+                                baseUrl = Url(binding.homeserver.text.toString()),
+                                identifier = IdentifierType.User(binding.username.text.toString()),
+                                passwordOrToken = binding.password.text.toString(),
+                                repositoriesModule = repositoriesModule,
+                                mediaStore = mediaStore,
+                                scope = coroutineScope
+                            ).getOrThrow()
 
-                    matrixClient.startSync()
-                } catch (e: MatrixServerException) {
-                    runOnUiThread {
-                        binding.error.text = e.message
+                            matrixClient.startSync()
+                        } catch (e: MatrixServerException) {
+                            runOnUiThread {
+                                binding.error.text = e.message
+                            }
+                            return@launch
+                        }
+                        finish()
                     }
-                    return@launch
                 }
-                finish()
+
+                 */
+    }
+
+    @Composable
+    @Preview
+    fun settings() {
+        LazyColumn {
+            item {
+                account()
             }
+        }
+    }
+
+    @Composable
+    @Preview
+    fun account() {
+        Row(modifier = Modifier.clickable {
+            startActivity(Intent(applicationContext, AccountActivity::class.java))
+        }) {
+            Text("Account", fontSize = 30.sp)
         }
     }
 }
