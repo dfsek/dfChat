@@ -185,7 +185,7 @@ class MainActivity : AppCompatActivity() {
                     LaunchedEffect(roomInfo, client) {
                         client.api.rooms.getEvent(roomInfo.roomId, eventId)
                             .onSuccess {
-                                eventValue.value = it.content.toString()
+                                eventValue.value = parseEvent(it.content)
                             }
                     }
                     Text(eventValue.value, fontSize = 12.sp)
