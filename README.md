@@ -7,9 +7,10 @@ it for that reason.
 TODO:
 
  - [x] Sign in
- - [ ] Persist login
+ - [x] Persist login
  - [x] Display all joined rooms
  - [x] Room images
+ - [ ] Encryption
  - [ ] Open room
  - [ ] Display joined spaces
  - [ ] Space images

@@ -12,26 +12,25 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
+import com.dfsek.dfchat.*
 import io.ktor.http.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import net.folivo.trixnity.client.MatrixClient
+import net.folivo.trixnity.client.fromStore
+import net.folivo.trixnity.client.media.InMemoryMediaStore
+import net.folivo.trixnity.client.store.repository.realm.createRealmRepositoriesModule
 import net.folivo.trixnity.clientserverapi.client.MatrixClientServerApiClientImpl
 import net.folivo.trixnity.clientserverapi.model.authentication.LoginType
 import kotlin.streams.toList
-import com.dfsek.dfchat.*
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.onEach
-import kotlinx.serialization.json.*
-import net.folivo.trixnity.client.login
-import net.folivo.trixnity.client.media.InMemoryMediaStore
-import net.folivo.trixnity.client.room
-import net.folivo.trixnity.client.store.repository.createInMemoryRepositoriesModule
-import net.folivo.trixnity.clientserverapi.model.authentication.IdentifierType
-import net.folivo.trixnity.clientserverapi.model.uia.AuthenticationType
 
 
 class AccountActivity : AppCompatActivity() {
@@ -46,7 +45,7 @@ class AccountActivity : AppCompatActivity() {
             Log.d("SVR", homeserver)
             val mediaStore = InMemoryMediaStore()
 
-            val repositoriesModule = createInMemoryRepositoriesModule()
+            val repositoriesModule = createRealmRepositoriesModule()
 
             val coroutineScope = CoroutineScope(Dispatchers.Default)
 
@@ -76,14 +75,14 @@ class AccountActivity : AppCompatActivity() {
         }
         setContent {
             Column {
-                homeserverUrl()
+                HomeserverUrl()
             }
         }
     }
 
     @Composable
     @Preview
-    fun homeserverUrl() {
+    fun HomeserverUrl() {
 
         Column {
             val homeserverUrl = remember { mutableStateOf("") }
@@ -161,12 +160,25 @@ class AccountActivity : AppCompatActivity() {
     }
 
     companion object {
+        init {
+            tryLogIn()
+        }
         @JvmStatic
         var matrixClient: MatrixClient? = null
             private set
         fun redirectIntent(context: Context, data: Uri?): Intent {
             return Intent(context, AccountActivity::class.java).apply {
                 setData(data)
+            }
+        }
+
+        private fun tryLogIn() {
+            CoroutineScope(Dispatchers.Default).launch {
+                matrixClient = MatrixClient.fromStore(
+                    repositoriesModule = createRealmRepositoriesModule(),
+                    mediaStore = InMemoryMediaStore(),
+                    scope = CoroutineScope(Dispatchers.Default),
+                ).getOrThrow()
             }
         }
     }
