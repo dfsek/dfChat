@@ -7,10 +7,7 @@ import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -144,37 +141,32 @@ class MainActivity : AppCompatActivity() {
                     modifier = Modifier.size(64.dp).clip(CircleShape).background(Color.Cyan)
                 )
             } else {
-                remember { mutableStateOf<ByteArray?>(null) }
-                    .apply {
-                        if (value != null) {
-                            Log.d("Channel Image", "Drawing image...")
-                            AsyncImage(
-                                model = ImageRequest.Builder(LocalContext.current)
-                                    .data(value)
-                                    .crossfade(true)
-                                    .decoderFactory(BitmapFactoryDecoder.Factory())
-                                    .build(),
-                                contentScale = ContentScale.Fit,
-                                contentDescription = null,
-                                modifier = Modifier.size(64.dp).clip(CircleShape)
-                            )
-                        }
-                        LaunchedEffect(image, client) {
-                            launch {
-                                client.api.media.download(image)
-                                    .onSuccess { media ->
-                                        val length = media.contentLength!!.toInt()
-                                        val byteArray = ByteArray(length)
-                                        launch {
-                                            media.content.readFully(byteArray, 0, length)
-                                        }.join()
-                                        Log.d("Bytes", media.contentType.toString())
-                                        value = byteArray
-
-                                    }
+                val bytes = remember { mutableStateOf<ByteArray?>(null) }
+                if (bytes.value != null) {
+                    Log.d("Channel Image", "Drawing image...")
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(bytes.value)
+                            .crossfade(true)
+                            .decoderFactory(BitmapFactoryDecoder.Factory())
+                            .build(),
+                        contentScale = ContentScale.Fit,
+                        contentDescription = null,
+                        modifier = Modifier.size(64.dp).clip(CircleShape)
+                    )
+                }
+                LaunchedEffect(image, client) {
+                    launch {
+                        client.api.media.download(image)
+                            .onSuccess { media ->
+                                val length = media.contentLength!!.toInt()
+                                val byteArray = ByteArray(length)
+                                media.content.readFully(byteArray, 0, length)
+                                Log.d("Image type", media.contentType.toString())
+                                bytes.value = byteArray
                             }
-                        }
                     }
+                }
             }
             Text(text = name)
         }
