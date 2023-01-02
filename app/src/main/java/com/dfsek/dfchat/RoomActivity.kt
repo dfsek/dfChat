@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
@@ -41,23 +42,29 @@ class RoomActivity : AppCompatActivity() {
                     Log.d("Opening room ID", roomId)
                     SettingsDropdown()
                     var events by remember { mutableStateOf<List<Pair<UserId, List<Event.RoomEvent<*>>>>>(emptyList()) }
+                    val ids = remember { mutableSetOf<EventId>() }
                     LaunchedEffect(AccountActivity.matrixClient) {
                         AccountActivity.matrixClient!!.api.sync.sync()
                             .onSuccess {
                                 AccountActivity.matrixClient!!.room.getLastTimelineEvents(RoomId(roomId))
-                                    .toFlowList(MutableStateFlow(25))
-                                    .collectLatest { eventsFlow ->
-                                        eventsFlow.reversed().forEach { eventFlow ->
-                                            val event = eventFlow.first()
-                                            Log.d("Event decoded", event.toString())
-                                            val user = event?.event!!.sender
+                                    .collectLatest { flowFlow ->
+                                        Log.d("More events", "Collecting new event stream.")
+                                        flowFlow?.collectLatest {
+                                            val event = it.first()
+                                            Log.d("Event decoded", parseEvent(event!!.event.content))
+                                            val user = event.event.sender
+                                            if(ids.contains(event.eventId)) {
+                                                Log.d("Event decoded", "Duplicate event.")
+                                                return@collectLatest
+                                            }
+                                            ids.add(event.eventId)
                                             events = if (events.isNotEmpty() && events.last().first == user) {
                                                 events.update(events.last().copy(second = events.last().second.plus(event.event)), events.size - 1)
                                             } else {
                                                 events.plus(Pair(user, mutableListOf()))
                                             }
                                             event.content?.onSuccess {
-                                                Log.d("Decrypt?", it.toString())
+                                                //Log.d("Decrypt?", it.toString())
                                             }?.onFailure {
                                                 it.printStackTrace()
                                             }
@@ -67,7 +74,7 @@ class RoomActivity : AppCompatActivity() {
                     }
 
                     LazyColumn {
-                        items(events) {
+                        items(events.reversed()) {
                             EventBlock(RoomId(roomId), it.second, it.first)
                         }
                     }
@@ -115,7 +122,8 @@ class RoomActivity : AppCompatActivity() {
             )
 
             Column {
-                eventIds.forEach { event ->
+                Text(userId.full, fontSize = 14.sp)
+                eventIds.reversed().forEach { event ->
                     Text(parseEvent(event.content))
                 }
             }
