@@ -1,32 +1,56 @@
 package com.dfsek.dfchat
 
 import android.content.Intent
+import android.graphics.ImageDecoder
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.ImageBitmapConfig
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import coil.decode.BitmapFactoryDecoder
+import coil.request.ImageRequest
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import net.folivo.trixnity.client.MatrixClient
 import net.folivo.trixnity.client.room
 import net.folivo.trixnity.client.store.Room
+import net.folivo.trixnity.clientserverapi.model.media.Media
 import net.folivo.trixnity.core.model.RoomId
+import okhttp3.internal.wait
+import java.nio.ByteBuffer
 import kotlin.streams.toList
 
 class MainActivity : AppCompatActivity() {
+
+    data class RoomInfo(
+        val name: String,
+        val avatarUrl: String?
+    )
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.i("Main", "Starting main activity")
@@ -35,14 +59,16 @@ class MainActivity : AppCompatActivity() {
                 val allRooms = remember { mutableStateOf(emptyMap<RoomId, Room?>()) }
                 SettingsDropdown()
                 AllRooms(allRooms.value.values.stream().map {
-                    if(it?.name?.explicitName != null) {
-                        it.name!!.explicitName as String
-                    } else if(it?.name?.heroes?.isNotEmpty() == true) {
-                        it.name!!.heroes[0].full as String
-                    } else {
-                        it?.name.toString()
-                    }
-                }.toList())
+                    Pair(
+                        if (it?.name?.explicitName != null) {
+                            it.name!!.explicitName as String
+                        } else if (it?.name?.heroes?.isNotEmpty() == true) {
+                            it.name!!.heroes[0].full
+                        } else {
+                            it?.name.toString()
+                        }, it?.avatarUrl
+                    )
+                }.toList(), AccountActivity.matrixClient)
                 Log.i("Main", "Refreshing rooms")
                 LaunchedEffect(AccountActivity.matrixClient) {
                     launch {
@@ -111,8 +137,45 @@ class MainActivity : AppCompatActivity() {
     }
 
     @Composable
-    fun Room(name: String) {
-        Column {
+    fun Room(name: String, image: String?, client: MatrixClient?) {
+        Row {
+            if (client == null || image == null) {
+                Box(
+                    modifier = Modifier.size(64.dp).clip(CircleShape).background(Color.Cyan)
+                )
+            } else {
+                remember { mutableStateOf<ByteArray?>(null) }
+                    .apply {
+                        if (value != null) {
+                            Log.d("Channel Image", "Drawing image...")
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(value)
+                                    .crossfade(true)
+                                    .decoderFactory(BitmapFactoryDecoder.Factory())
+                                    .build(),
+                                contentScale = ContentScale.Fit,
+                                contentDescription = null,
+                                modifier = Modifier.size(64.dp).clip(CircleShape)
+                            )
+                        }
+                        LaunchedEffect(image, client) {
+                            launch {
+                                client.api.media.download(image)
+                                    .onSuccess { media ->
+                                        val length = media.contentLength!!.toInt()
+                                        val byteArray = ByteArray(length)
+                                        launch {
+                                            media.content.readFully(byteArray, 0, length)
+                                        }.join()
+                                        Log.d("Bytes", media.contentType.toString())
+                                        value = byteArray
+
+                                    }
+                            }
+                        }
+                    }
+            }
             Text(text = name)
         }
     }
@@ -120,28 +183,15 @@ class MainActivity : AppCompatActivity() {
     @Preview
     @Composable
     fun PreviewRoom() {
-        Room("computer - general")
+        Room("computer - general", null, null)
     }
 
     @Composable
-    fun AllRooms(rooms: List<String>) {
+    fun AllRooms(rooms: List<Pair<String, String?>>, client: MatrixClient?) {
         LazyColumn {
             items(rooms) {
-                Room(it)
+                Room(it.first, it.second, client)
             }
         }
-    }
-
-    @Preview
-    @Composable
-    fun PreviewAllRooms() {
-        AllRooms(
-            listOf(
-                "computer - general",
-                "computer - stramurtcraft",
-                "dfsek",
-                "test"
-            )
-        )
     }
 }
