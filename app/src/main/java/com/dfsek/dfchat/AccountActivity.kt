@@ -175,7 +175,9 @@ class AccountActivity : AppCompatActivity() {
                     repositoriesModule = createRealmRepositoriesModule(),
                     mediaStore = InMemoryMediaStore(),
                     scope = CoroutineScope(Dispatchers.Default),
-                ).getOrThrow()
+                ).getOrThrow()?.apply {
+                    startSync()
+                }
             }
         }
     }

@@ -59,14 +59,9 @@ class MainActivity : AppCompatActivity() {
                 AccountActivity.matrixClient?.let { client ->
                     AllRooms(allRooms.value.values.stream().map {
                         RoomInfo(
-                            if (it?.name?.explicitName != null) {
-                                it.name!!.explicitName as String
-                            } else if (it?.name?.heroes?.isNotEmpty() == true) {
-                                it.name!!.heroes[0].full
-                            } else {
-                                it?.name.toString()
-                            }, it?.avatarUrl,
-                            it!!.roomId,
+                            it!!.getHumanName(),
+                            it.avatarUrl,
+                            it.roomId,
                             it.lastEventId
                         )
                     }.toList(), client)

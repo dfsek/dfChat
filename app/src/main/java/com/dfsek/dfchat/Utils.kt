@@ -23,6 +23,7 @@ import net.folivo.trixnity.client.MatrixClient
 import net.folivo.trixnity.client.MatrixClientConfiguration
 import net.folivo.trixnity.client.loginWith
 import net.folivo.trixnity.client.media.MediaStore
+import net.folivo.trixnity.client.store.Room
 import net.folivo.trixnity.clientserverapi.model.authentication.IdentifierType
 import net.folivo.trixnity.clientserverapi.model.authentication.LoginType
 import net.folivo.trixnity.core.model.UserId
@@ -92,26 +93,30 @@ suspend fun MatrixClient.Companion.login(
     )
 
 fun parseEvent(content: EventContent): String {
-    return when(content) {
-        is MemberEventContent -> content.displayName + " " + when(content.membership) {
-            Membership.LEAVE  -> "left."
-            Membership.BAN    -> "was banned."
+    return when (content) {
+        is MemberEventContent -> content.displayName + " " + when (content.membership) {
+            Membership.LEAVE -> "left."
+            Membership.BAN -> "was banned."
             Membership.INVITE -> "was invited."
-            Membership.JOIN   -> "joined."
-            Membership.KNOCK  -> "knocked."
+            Membership.JOIN -> "joined."
+            Membership.KNOCK -> "knocked."
         }
+
         is RoomMessageEventContent -> content.body
         is EncryptedEventContent -> "Encrypted message"
         else -> content.toString()
     }
 }
 
-fun extractUser(event: Event<*>): UserId? {
-    return when(event) {
-        is Event.MessageEvent -> event.sender
-        else -> null
+fun Room.getHumanName(): String =
+    if (name?.explicitName != null) {
+        name!!.explicitName as String
+    } else if (name?.heroes?.isNotEmpty() == true) {
+        name!!.heroes[0].full
+    } else {
+        name.toString()
     }
-}
+
 
 @Composable
 @Preview
