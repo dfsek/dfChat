@@ -1,11 +1,21 @@
 package com.dfsek.dfchat
 
+import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.browser.customtabs.CustomTabsSession
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.content.ContextCompat.startActivity
 import arrow.core.flatMap
 import io.ktor.http.*
 import kotlinx.coroutines.CoroutineScope
@@ -15,7 +25,9 @@ import net.folivo.trixnity.client.loginWith
 import net.folivo.trixnity.client.media.MediaStore
 import net.folivo.trixnity.clientserverapi.model.authentication.IdentifierType
 import net.folivo.trixnity.clientserverapi.model.authentication.LoginType
+import net.folivo.trixnity.core.model.UserId
 import net.folivo.trixnity.core.model.events.DecryptedOlmEvent
+import net.folivo.trixnity.core.model.events.Event
 import net.folivo.trixnity.core.model.events.EventContent
 import net.folivo.trixnity.core.model.events.RoomEventContent
 import net.folivo.trixnity.core.model.events.m.room.EncryptedEventContent
@@ -92,6 +104,63 @@ fun parseEvent(content: EventContent): String {
         is EncryptedEventContent -> "Encrypted message"
         else -> content.toString()
     }
+}
+
+fun extractUser(event: Event<*>): UserId? {
+    return when(event) {
+        is Event.MessageEvent -> event.sender
+        else -> null
+    }
+}
+
+@Composable
+@Preview
+fun Activity.SettingsDropdown() {
+    Box(
+        contentAlignment = Alignment.Center
+    ) {
+        var expanded by remember {
+            mutableStateOf(false)
+        }
+        IconButton(onClick = {
+            expanded = true
+        }) {
+            Icon(
+                imageVector = Icons.Default.MoreVert,
+                contentDescription = "Open Options"
+            )
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = {
+                expanded = false
+            }
+        ) {
+            DropdownMenuItem(
+                onClick = {
+                    startActivity(Intent(applicationContext, SettingsActivity::class.java))
+                    expanded = false
+                },
+                enabled = true
+            ) {
+                Text("Settings")
+            }
+            DropdownMenuItem(
+                onClick = {
+                    startActivity(Intent(applicationContext, MainActivity::class.java))
+                    finish()
+                    expanded = false
+                },
+                enabled = true
+            ) {
+                Text("Refresh")
+            }
+        }
+    }
+}
+
+fun <E> List<E>.update(value: E, index: Int): List<E> {
+    return mapIndexed { i, e -> if (i == index) value else e }
 }
 
 internal const val SSO_REDIRECT_PATH = "/_matrix/client/r0/login/sso/redirect"

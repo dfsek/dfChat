@@ -42,7 +42,6 @@ import net.folivo.trixnity.core.model.RoomId
 import kotlin.streams.toList
 
 class MainActivity : AppCompatActivity() {
-
     data class RoomInfo(
         val name: String,
         val avatarUrl: String?,
@@ -74,65 +73,17 @@ class MainActivity : AppCompatActivity() {
                 }
                 Log.i("Main", "Refreshing rooms")
                 LaunchedEffect(AccountActivity.matrixClient) {
-                    launch {
-                        if (AccountActivity.matrixClient != null) {
-                            AccountActivity.matrixClient!!.room.getAll()
-                                .onEach { roomEntry ->
-                                    allRooms.value = roomEntry.mapValues {
-                                        it.value.first()
-                                    }
-                                    roomEntry.forEach { (roomId, _) ->
-                                        Log.d("Room", roomId.full)
-                                    }
-                                }.collect()
-                        }
+                    if (AccountActivity.matrixClient != null) {
+                        AccountActivity.matrixClient!!.room.getAll()
+                            .onEach { roomEntry ->
+                                allRooms.value = roomEntry.mapValues {
+                                    it.value.first()
+                                }
+                                roomEntry.forEach { (roomId, _) ->
+                                    Log.d("Room", roomId.full)
+                                }
+                            }.collect()
                     }
-                }
-            }
-        }
-    }
-
-    @Composable
-    @Preview
-    fun SettingsDropdown() {
-        Box(
-            contentAlignment = Alignment.Center
-        ) {
-            var expanded by remember {
-                mutableStateOf(false)
-            }
-            IconButton(onClick = {
-                expanded = true
-            }) {
-                Icon(
-                    imageVector = Icons.Default.MoreVert,
-                    contentDescription = "Open Options"
-                )
-            }
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = {
-                    expanded = false
-                }
-            ) {
-                DropdownMenuItem(
-                    onClick = {
-                        startActivity(Intent(applicationContext, SettingsActivity::class.java))
-                        expanded = false
-                    },
-                    enabled = true
-                ) {
-                    Text("Settings")
-                }
-                DropdownMenuItem(
-                    onClick = {
-                        startActivity(Intent(applicationContext, MainActivity::class.java))
-                        finish()
-                        expanded = false
-                    },
-                    enabled = true
-                ) {
-                    Text("Refresh")
                 }
             }
         }
@@ -161,16 +112,14 @@ class MainActivity : AppCompatActivity() {
                     )
                 }
                 LaunchedEffect(roomInfo, client) {
-                    launch {
-                        client.api.media.download(roomInfo.avatarUrl)
-                            .onSuccess { media ->
-                                val length = media.contentLength!!.toInt()
-                                val byteArray = ByteArray(length)
-                                media.content.readFully(byteArray, 0, length)
-                                Log.d("Image type", media.contentType.toString())
-                                bytes.value = byteArray
-                            }
-                    }
+                    client.api.media.download(roomInfo.avatarUrl)
+                        .onSuccess { media ->
+                            val length = media.contentLength!!.toInt()
+                            val byteArray = ByteArray(length)
+                            media.content.readFully(byteArray, 0, length)
+                            Log.d("Image type", media.contentType.toString())
+                            bytes.value = byteArray
+                        }
                 }
             } ?: Box(
                 modifier = Modifier.size(64.dp).clip(CircleShape).background(Color.Cyan)
