@@ -39,8 +39,6 @@ class AccountActivity : AppCompatActivity() {
         val token = intent.data?.getQueryParameter("loginToken")
 
         if(token != null) {
-            Log.d("TOKEN", token.toString())
-
             val homeserver = intent.data!!.getQueryParameter("homeserver").toString()
             Log.d("SVR", homeserver)
             val mediaStore = InMemoryMediaStore()

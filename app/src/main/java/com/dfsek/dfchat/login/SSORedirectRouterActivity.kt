@@ -8,7 +8,6 @@ import com.dfsek.dfchat.AccountActivity
 class SSORedirectRouterActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Log.d("SSO Redirect", "Redirecting: " + intent.data)
         startActivity(AccountActivity.redirectIntent(this, intent.data))
         finish()
     }
