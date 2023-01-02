@@ -27,12 +27,17 @@ import coil.request.ImageRequest
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Contextual
+import net.folivo.trixnity.client.getEventId
 import net.folivo.trixnity.client.room
 import net.folivo.trixnity.client.room.toFlowList
+import net.folivo.trixnity.client.store.TimelineEvent
 import net.folivo.trixnity.core.model.EventId
 import net.folivo.trixnity.core.model.RoomId
 import net.folivo.trixnity.core.model.UserId
 import net.folivo.trixnity.core.model.events.Event
+import net.folivo.trixnity.core.model.events.EventContent
+import net.folivo.trixnity.core.model.events.RoomEventContent
+import net.folivo.trixnity.core.model.events.m.room.RoomMessageEventContent
 
 class RoomActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,7 +52,6 @@ class RoomActivity : AppCompatActivity() {
                         Text(roomName, fontSize = 24.sp)
                     }
                     var events by remember { mutableStateOf<List<Pair<UserId, List<Event.RoomEvent<*>>>>>(emptyList()) }
-                    val ids = remember { mutableSetOf<EventId>() }
                     LaunchedEffect(AccountActivity.matrixClient) {
                         launch {
                             AccountActivity.matrixClient!!.room.getById(RoomId(roomId))
@@ -55,41 +59,49 @@ class RoomActivity : AppCompatActivity() {
                                     roomName = it!!.getHumanName()
                                 }
                         }
+                        fun handleEvent(event: Event.RoomEvent<*>) {
+                            Log.d("Event decoded", parseEvent(event.content))
+                            val user = event.sender
+                            events = if (events.isNotEmpty() && events.last().first == user) {
+                                events.update(
+                                    events.last()
+                                        .copy(second = events.last().second.plus(event)),
+                                    events.size - 1
+                                )
+                            } else {
+                                events.plus(Pair(user, mutableListOf(event)))
+                            }
+                        }
+
+                        launch {
+                            AccountActivity.matrixClient!!.api.sync.subscribeAllEvents {
+                                Log.d("MATRIX EVENT", it.toString())
+                                if(it is Event.RoomEvent) handleEvent(it)
+                            }
+                        }
                         launch {
                             AccountActivity.matrixClient!!.room.getLastTimelineEvents(RoomId(roomId))
                                 .collectLatest { flowFlow ->
                                     Log.d("More events", "Collecting new event stream.")
-                                    flowFlow?.collectLatest {
-                                        val event = it.first()
-                                        Log.d("Event decoded", parseEvent(event!!.event.content))
-                                        val user = event.event.sender
-                                        if (ids.contains(event.eventId)) {
-                                            Log.d("Event decoded", "Duplicate event.")
-                                            return@collectLatest
-                                        }
-                                        ids.add(event.eventId)
-                                        events = if (events.isNotEmpty() && events.last().first == user) {
-                                            events.update(
-                                                events.last()
-                                                    .copy(second = events.last().second.plus(event.event)),
-                                                events.size - 1
-                                            )
-                                        } else {
-                                            events.plus(Pair(user, mutableListOf()))
-                                        }
-                                        event.content?.onSuccess {
+                                    flowFlow?.collectLatest { flow ->
+                                        val event = flow.first()
+                                        event?.let { handleEvent(it.event) }
+                                        event?.content?.onSuccess {
                                             //Log.d("Decrypt?", it.toString())
                                         }?.onFailure {
                                             it.printStackTrace()
                                         }
                                     }
-
                                 }
                         }
                     }
 
                     LazyColumn {
                         items(events.reversed()) {
+                            Log.d("USER", it.first.toString())
+                            it.second.reversed().forEach {
+                                Log.d("MESSAGE", it.toString())
+                            }
                             EventBlock(RoomId(roomId), it.second, it.first)
                         }
                     }
@@ -101,8 +113,6 @@ class RoomActivity : AppCompatActivity() {
     @Composable
     fun EventBlock(roomId: RoomId, eventIds: List<Event.RoomEvent<*>>, userId: UserId) {
         Row {
-            val avatarUrl = remember { mutableStateOf<String?>(null) }
-
             val bytes = remember { mutableStateOf<ByteArray?>(null) }
             bytes.value?.let {
                 Log.d("Channel Image", "Drawing image...")
