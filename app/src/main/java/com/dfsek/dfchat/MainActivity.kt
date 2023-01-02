@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,6 +26,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
@@ -35,6 +37,7 @@ import kotlinx.coroutines.launch
 import net.folivo.trixnity.client.MatrixClient
 import net.folivo.trixnity.client.room
 import net.folivo.trixnity.client.store.Room
+import net.folivo.trixnity.core.model.EventId
 import net.folivo.trixnity.core.model.RoomId
 import kotlin.streams.toList
 
@@ -42,7 +45,9 @@ class MainActivity : AppCompatActivity() {
 
     data class RoomInfo(
         val name: String,
-        val avatarUrl: String?
+        val avatarUrl: String?,
+        val roomId: RoomId,
+        val lastEvent: EventId? = null
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,27 +57,31 @@ class MainActivity : AppCompatActivity() {
             Column {
                 val allRooms = remember { mutableStateOf(emptyMap<RoomId, Room?>()) }
                 SettingsDropdown()
-                AllRooms(allRooms.value.values.stream().map {
-                    Pair(
-                        if (it?.name?.explicitName != null) {
-                            it.name!!.explicitName as String
-                        } else if (it?.name?.heroes?.isNotEmpty() == true) {
-                            it.name!!.heroes[0].full
-                        } else {
-                            it?.name.toString()
-                        }, it?.avatarUrl
-                    )
-                }.toList(), AccountActivity.matrixClient)
+                AccountActivity.matrixClient?.let { client ->
+                    AllRooms(allRooms.value.values.stream().map {
+                        RoomInfo(
+                            if (it?.name?.explicitName != null) {
+                                it.name!!.explicitName as String
+                            } else if (it?.name?.heroes?.isNotEmpty() == true) {
+                                it.name!!.heroes[0].full
+                            } else {
+                                it?.name.toString()
+                            }, it?.avatarUrl,
+                            it!!.roomId,
+                            it.lastEventId
+                        )
+                    }.toList(), client)
+                }
                 Log.i("Main", "Refreshing rooms")
                 LaunchedEffect(AccountActivity.matrixClient) {
                     launch {
                         if (AccountActivity.matrixClient != null) {
                             AccountActivity.matrixClient!!.room.getAll()
-                                .onEach {
-                                    allRooms.value = it.mapValues {
+                                .onEach { roomEntry ->
+                                    allRooms.value = roomEntry.mapValues {
                                         it.value.first()
                                     }
-                                    it.forEach { roomId, _ ->
+                                    roomEntry.forEach { (roomId, _) ->
                                         Log.d("Room", roomId.full)
                                     }
                                 }.collect()
@@ -130,19 +139,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     @Composable
-    fun Room(name: String, image: String?, client: MatrixClient?) {
-        Row {
-            if (client == null || image == null) {
-                Box(
-                    modifier = Modifier.size(64.dp).clip(CircleShape).background(Color.Cyan)
-                )
-            } else {
+    fun Room(roomInfo: RoomInfo, client: MatrixClient) {
+        Row(modifier = Modifier.clickable {
+            startActivity(Intent(applicationContext, RoomActivity::class.java).apply {
+                putExtra("room", roomInfo.roomId.full)
+            })
+        }) {
+            roomInfo.avatarUrl?.let {
                 val bytes = remember { mutableStateOf<ByteArray?>(null) }
-                if (bytes.value != null) {
+                bytes.value?.let {
                     Log.d("Channel Image", "Drawing image...")
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
-                            .data(bytes.value)
+                            .data(it)
                             .crossfade(true)
                             .decoderFactory(BitmapFactoryDecoder.Factory())
                             .build(),
@@ -151,9 +160,9 @@ class MainActivity : AppCompatActivity() {
                         modifier = Modifier.size(64.dp).clip(CircleShape)
                     )
                 }
-                LaunchedEffect(image, client) {
+                LaunchedEffect(roomInfo, client) {
                     launch {
-                        client.api.media.download(image)
+                        client.api.media.download(roomInfo.avatarUrl)
                             .onSuccess { media ->
                                 val length = media.contentLength!!.toInt()
                                 val byteArray = ByteArray(length)
@@ -163,22 +172,33 @@ class MainActivity : AppCompatActivity() {
                             }
                     }
                 }
+            } ?: Box(
+                modifier = Modifier.size(64.dp).clip(CircleShape).background(Color.Cyan)
+            )
+            Column {
+                Text(roomInfo.name, fontSize = 18.sp)
+
+                roomInfo.lastEvent?.let { eventId ->
+                    val eventValue = remember {
+                        mutableStateOf("")
+                    }
+                    LaunchedEffect(roomInfo, client) {
+                        client.api.rooms.getEvent(roomInfo.roomId, eventId)
+                            .onSuccess {
+                                eventValue.value = it.content.toString()
+                            }
+                    }
+                    Text(eventValue.value, fontSize = 12.sp)
+                }
             }
-            Text(text = name)
         }
     }
 
-    @Preview
     @Composable
-    fun PreviewRoom() {
-        Room("computer - general", null, null)
-    }
-
-    @Composable
-    fun AllRooms(rooms: List<Pair<String, String?>>, client: MatrixClient?) {
+    fun AllRooms(rooms: List<RoomInfo>, client: MatrixClient) {
         LazyColumn {
             items(rooms) {
-                Room(it.first, it.second, client)
+                Room(it, client)
             }
         }
     }

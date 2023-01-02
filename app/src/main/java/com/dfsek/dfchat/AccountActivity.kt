@@ -145,7 +145,6 @@ class AccountActivity : AppCompatActivity() {
                 }
             }
         }
-
     }
 
     private fun createUrl(base: String, provider: String): String {
