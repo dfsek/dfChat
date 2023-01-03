@@ -30,6 +30,9 @@ import net.folivo.trixnity.client.media.InMemoryMediaStore
 import net.folivo.trixnity.client.store.repository.realm.createRealmRepositoriesModule
 import net.folivo.trixnity.clientserverapi.client.MatrixClientServerApiClientImpl
 import net.folivo.trixnity.clientserverapi.model.authentication.LoginType
+import net.folivo.trixnity.core.model.events.Event
+import net.folivo.trixnity.core.model.events.m.room.RoomMessageEventContent
+import net.folivo.trixnity.core.subscribe
 import kotlin.streams.toList
 
 
@@ -162,7 +165,17 @@ class AccountActivity : AppCompatActivity() {
         }
         @JvmStatic
         var matrixClient: MatrixClient? = null
-            private set
+            private set(it) {
+                field = it
+                CoroutineScope(Dispatchers.Default).launch {
+                    it?.api?.sync?.subscribe<RoomMessageEventContent.TextMessageEventContent> {
+                        Log.d("Matrix Message Event", it.toString())
+                    }
+                    it?.api?.sync?.subscribeAllEvents {
+                        Log.d("Matrix Event", it.toString())
+                    }
+                }
+            }
         fun redirectIntent(context: Context, data: Uri?): Intent {
             return Intent(context, AccountActivity::class.java).apply {
                 setData(data)
@@ -175,9 +188,7 @@ class AccountActivity : AppCompatActivity() {
                     repositoriesModule = createRealmRepositoriesModule(),
                     mediaStore = InMemoryMediaStore(),
                     scope = CoroutineScope(Dispatchers.Default),
-                ).getOrThrow()?.apply {
-                    startSync()
-                }
+                ).getOrThrow()
             }
         }
     }
