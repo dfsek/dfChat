@@ -42,10 +42,9 @@ android {
     }
 }
 
-val trixnityVersion =
-    "3.0.0"
-fun trixnity(module: String, version: String = trixnityVersion) =
-    "net.folivo:trixnity-$module:$version"
+val trixnityVersion = "3.1.0"
+
+fun trixnity(module: String, version: String = trixnityVersion) = "net.folivo:trixnity-$module:$version"
 
 
 dependencies {
@@ -66,6 +65,7 @@ dependencies {
 
     implementation(trixnity("client"))
     implementation(trixnity("client-repository-realm"))
+
     implementation("io.ktor:ktor-client-android:2.2.1")
     implementation("androidx.browser:browser:1.4.0")
     implementation("io.arrow-kt:arrow-core:1.1.3")

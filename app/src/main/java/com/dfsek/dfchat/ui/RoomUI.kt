@@ -46,15 +46,15 @@ fun RoomUI(
         Box(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.fillMaxSize()) {
                 RoomMessages(roomState, scrollState, Modifier.weight(1f))
+                UserInput(
+                    onMessageSent = { content ->
+                        scope.launch {
+                            roomState.sendTextMessage(content)
+                        }
+                    },
+                    modifier = Modifier.navigationBarsPadding().imePadding(),
+                )
             }
-            UserInput(
-                onMessageSent = { content ->
-                    scope.launch {
-                        roomState.sendTextMessage(content)
-                    }
-                },
-                modifier = Modifier.navigationBarsPadding().imePadding(),
-            )
             var roomName by remember { mutableStateOf("") }
 
             LaunchedEffect(roomState.roomId) {
@@ -63,7 +63,7 @@ fun RoomUI(
                 }
             }
 
-            RoomTopBar(roomName, Modifier.statusBarsPadding(), applicationContext)
+            RoomTopBar(roomName, Modifier.statusBarsPadding(), applicationContext, roomState, scope)
         }
     }
 }
@@ -90,9 +90,14 @@ fun UserInput(
 }
 
 @Composable
-fun RoomTopBar(name: String, modifier: Modifier, applicationContext: Context) {
+fun RoomTopBar(name: String, modifier: Modifier, applicationContext: Context, state: ChatRoomState, scope: CoroutineScope) {
     Row(modifier = modifier) {
-        SettingsDropdown(applicationContext)
+        SettingsDropdown(applicationContext, refresh = {
+            scope.launch {
+                Log.d("Fetching", "more messages")
+                state.fetchMessages()
+            }
+        })
         Text(name, fontSize = 32.sp)
     }
 }

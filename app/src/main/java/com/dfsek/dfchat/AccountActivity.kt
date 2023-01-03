@@ -20,6 +20,7 @@ import com.dfsek.dfchat.*
 import io.ktor.http.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -27,9 +28,13 @@ import kotlinx.serialization.json.jsonPrimitive
 import net.folivo.trixnity.client.MatrixClient
 import net.folivo.trixnity.client.fromStore
 import net.folivo.trixnity.client.media.InMemoryMediaStore
+import net.folivo.trixnity.client.room
+import net.folivo.trixnity.client.room.message.text
 import net.folivo.trixnity.client.store.repository.realm.createRealmRepositoriesModule
 import net.folivo.trixnity.clientserverapi.client.MatrixClientServerApiClientImpl
+import net.folivo.trixnity.clientserverapi.client.SyncState
 import net.folivo.trixnity.clientserverapi.model.authentication.LoginType
+import net.folivo.trixnity.core.model.RoomId
 import net.folivo.trixnity.core.model.events.Event
 import net.folivo.trixnity.core.model.events.m.room.RoomMessageEventContent
 import net.folivo.trixnity.core.subscribe
@@ -41,7 +46,7 @@ class AccountActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         val token = intent.data?.getQueryParameter("loginToken")
 
-        if(token != null) {
+        if (token != null) {
             val homeserver = intent.data!!.getQueryParameter("homeserver").toString()
             Log.d("SVR", homeserver)
             val mediaStore = InMemoryMediaStore()
@@ -62,13 +67,13 @@ class AccountActivity : AppCompatActivity() {
                         deviceId = "dfchat",
                         repositoriesModule = repositoriesModule,
                         scope = coroutineScope
-                    ).getOrThrow().also {
-                        it.startSync()
-                        runOnUiThread {
-                            startActivity(Intent(applicationContext, MainActivity::class.java))
-                            finish()
-                        }
+                    ).getOrThrow()
+
+                    runOnUiThread {
+                        startActivity(Intent(applicationContext, MainActivity::class.java))
+                        finish()
                     }
+                    matrixClient?.startSync()
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
@@ -163,19 +168,11 @@ class AccountActivity : AppCompatActivity() {
         init {
             tryLogIn()
         }
+
         @JvmStatic
         var matrixClient: MatrixClient? = null
-            private set(it) {
-                field = it
-                CoroutineScope(Dispatchers.Default).launch {
-                    it?.api?.sync?.subscribe<RoomMessageEventContent.TextMessageEventContent> {
-                        Log.d("Matrix Message Event", it.toString())
-                    }
-                    it?.api?.sync?.subscribeAllEvents {
-                        Log.d("Matrix Event", it.toString())
-                    }
-                }
-            }
+            private set
+
         fun redirectIntent(context: Context, data: Uri?): Intent {
             return Intent(context, AccountActivity::class.java).apply {
                 setData(data)
@@ -189,6 +186,7 @@ class AccountActivity : AppCompatActivity() {
                     mediaStore = InMemoryMediaStore(),
                     scope = CoroutineScope(Dispatchers.Default),
                 ).getOrThrow()
+                matrixClient?.startSync()
             }
         }
     }

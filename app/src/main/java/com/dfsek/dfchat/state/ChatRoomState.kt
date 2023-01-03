@@ -10,6 +10,7 @@ import net.folivo.trixnity.client.room
 import net.folivo.trixnity.client.room.message.text
 import net.folivo.trixnity.client.store.Room
 import net.folivo.trixnity.client.store.TimelineEvent
+import net.folivo.trixnity.core.model.EventId
 import net.folivo.trixnity.core.model.RoomId
 import net.folivo.trixnity.core.model.UserId
 import okhttp3.internal.toImmutableList
@@ -22,29 +23,39 @@ class ChatRoomState(
 
     suspend fun fetchMessages() {
         if (events.isEmpty()) {
-            client.room.getLastTimelineEvents(roomId = roomId)
+            client.room.getLastTimelineEvent(roomId = roomId)
                 .collectLatest { flowFlow ->
-                    flowFlow?.collectLatest {
-                        it.first()?.let { eventUnwrapped ->
-                            Log.d("Event added", eventUnwrapped.toString())
+                    flowFlow?.collectLatest { eventUnwrapped ->
+                        Log.d("Event added", eventUnwrapped.toString())
+                        if (eventUnwrapped != null) {
                             events.add(eventUnwrapped)
+                            if(eventUnwrapped.gap != null) {
+                                client.room.fillTimelineGaps(eventUnwrapped.eventId, roomId)
+                            }
+                            fetchMessages()
+                        } else {
+                            Log.e("Event fetcher", "could not fetch events.")
                         }
                     }
                 }
         } else {
-            client.room.getTimelineEvents(events.last().eventId, roomId = roomId)
-                .collectLatest {
-                    it.first()?.let { eventUnwrapped ->
-                        Log.d("Late Event added", eventUnwrapped.toString())
-                        events.add(eventUnwrapped)
+            suspend fun getPrevious(eventId: EventId, count: Int) {
+                client.room.getTimelineEvent(eventId, roomId)
+                    .collectLatest {
+                        it?.let { eventUnwrapped ->
+                            Log.d("Late Event added", eventUnwrapped.toString())
+                            events.add(eventUnwrapped)
+                            if (count < 20) {
+                                eventUnwrapped.previousEventId?.let { it1 -> getPrevious(it1, count + 1) }
+                            }
+                        }
                     }
-                }
+            }
+            getPrevious(events().last().eventId, 0)
         }
     }
 
-    fun events(): List<TimelineEvent> = events.toImmutableList().sortedBy {
-        it.event.originTimestamp
-    }
+    fun events(): List<TimelineEvent> = events.toImmutableList()
 
     fun splitEvents(): List<Pair<UserId, List<TimelineEvent>>> {
         val list = mutableListOf<Pair<UserId, MutableList<TimelineEvent>>>()
@@ -73,9 +84,11 @@ class ChatRoomState(
     }
 
     suspend fun sendTextMessage(message: String) {
+        Log.d("Sending Message", message)
         client.room.sendMessage(roomId) {
             text(message)
         }
+
     }
 
     suspend fun getAvatar(id: UserId, consume: suspend (ByteArray) -> Unit) {
