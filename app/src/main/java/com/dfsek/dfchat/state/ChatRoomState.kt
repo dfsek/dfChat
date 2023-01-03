@@ -27,15 +27,11 @@ class ChatRoomState(
                 .collectLatest { flowFlow ->
                     flowFlow?.collectLatest { eventUnwrapped ->
                         Log.d("Event added", eventUnwrapped.toString())
-                        if (eventUnwrapped != null) {
-                            events.add(eventUnwrapped)
-                            if(eventUnwrapped.gap != null) {
-                                client.room.fillTimelineGaps(eventUnwrapped.eventId, roomId)
-                            }
-                            fetchMessages()
-                        } else {
-                            Log.e("Event fetcher", "could not fetch events.")
+                        events.add(eventUnwrapped)
+                        if(eventUnwrapped.gap != null) {
+                            client.room.fillTimelineGaps(eventUnwrapped.eventId, roomId)
                         }
+                        fetchMessages()
                     }
                 }
         } else {
@@ -93,9 +89,9 @@ class ChatRoomState(
 
     suspend fun getAvatar(id: UserId, consume: suspend (ByteArray) -> Unit) {
         client.api.users.getAvatarUrl(id)
-            .onSuccess {
-                if (it != null) {
-                    client.api.media.download(it)
+            .onSuccess { url ->
+                if (url != null) {
+                    client.api.media.download(url)
                         .onSuccess {
                             val bytes = ByteArray(it.contentLength!!.toInt())
                             it.content.readFully(bytes, 0, it.contentLength!!.toInt())
