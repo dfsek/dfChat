@@ -49,7 +49,7 @@ fun openUrlInChromeCustomTab(
             .build()
             .launchUrl(context, Uri.parse(url))
     } catch (activityNotFoundException: ActivityNotFoundException) {
-        Toast.makeText(context, "No browser available!", Toast.LENGTH_LONG)
+        Toast.makeText(context, "No browser available!", Toast.LENGTH_LONG).show()
     }
 }
 
@@ -119,8 +119,7 @@ fun Room.getHumanName(): String =
 
 
 @Composable
-@Preview
-fun Activity.SettingsDropdown() {
+fun SettingsDropdown(applicationContext: Context, refresh: () -> Unit = {}) {
     Box(
         contentAlignment = Alignment.Center
     ) {
@@ -143,7 +142,7 @@ fun Activity.SettingsDropdown() {
         ) {
             DropdownMenuItem(
                 onClick = {
-                    startActivity(Intent(applicationContext, SettingsActivity::class.java))
+                    applicationContext.startActivity(Intent(applicationContext, SettingsActivity::class.java))
                     expanded = false
                 },
                 enabled = true
@@ -152,8 +151,7 @@ fun Activity.SettingsDropdown() {
             }
             DropdownMenuItem(
                 onClick = {
-                    startActivity(Intent(applicationContext, MainActivity::class.java))
-                    finish()
+                    refresh()
                     expanded = false
                 },
                 enabled = true

@@ -26,6 +26,8 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
+import com.dfsek.dfchat.state.ChatRoomState
+import com.dfsek.dfchat.ui.RoomUI
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
@@ -41,177 +43,22 @@ import net.folivo.trixnity.core.model.events.Event
 class RoomActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
-            Surface {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    intent.getStringExtra("room")?.let { roomId ->
-                        Log.d("Opening room ID", roomId)
-                        var roomName by remember { mutableStateOf("") }
-                        var events by remember { mutableStateOf<List<Pair<UserId, List<Event.RoomEvent<*>>>>>(emptyList()) }
-                        Row(modifier = Modifier.statusBarsPadding().height(24.dp).background(Color.White)) {
-                            SettingsDropdown()
-                            Text(roomName, fontSize = 32.sp)
-                        }
-                        fun handleEvent(event: Event.RoomEvent<*>) {
-                            Log.d("Event decoded", parseEvent(event.content))
-                            val user = event.sender
-                            events = if (events.isNotEmpty() && events.last().first == user) {
-                                events.update(
-                                    events.last()
-                                        .copy(second = events.last().second.plus(event)),
-                                    events.size - 1
-                                )
-                            } else {
-                                events.plus(Pair(user, mutableListOf(event)))
-                            }
-                        }
-                        LaunchedEffect(AccountActivity.matrixClient) {
-                            launch {
-                                AccountActivity.matrixClient!!.room.getById(RoomId(roomId))
-                                    .collectLatest {
-                                        roomName = it!!.getHumanName()
-                                    }
-                            }
-                        }
-
-                        Column(modifier = Modifier.fillMaxSize()) {
-                            val state = LazyListState()
-                            LazyColumn(state = state, modifier = Modifier.weight(1f)) {
-                                items(events.reversed()) {
-                                    Log.d("USER", it.first.toString())
-                                    it.second.reversed().forEach {
-                                        Log.d("MESSAGE", it.toString())
-                                    }
-                                    EventBlock(RoomId(roomId), it.second, it.first)
-                                }
-                            }
-                            InfiniteScrollHandler(state) {
-                                Log.d("SCROLL", "Reached top!")
-                                CoroutineScope(Dispatchers.Default).launch {
-                                    suspend fun goBack() {
-                                        Log.d("Starting", events.first().second.first().toString())
-                                        AccountActivity.matrixClient!!.room.getTimelineEvents(
-                                            roomId = RoomId(roomId),
-                                            startFrom = events.first().second.first().id,
-                                            direction = GetEvents.Direction.BACKWARDS
-                                        )
-                                            .collectLatest { flow ->
-                                                Log.d("More events", "Collecting new event stream.")
-                                                val event = flow.first()
-                                                event?.let { handleEvent(it.event) }
-                                                event?.content?.onSuccess {
-                                                    //Log.d("Decrypt?", it.toString())
-                                                }?.onFailure {
-                                                    it.printStackTrace()
-                                                }
-
-                                            }
-                                    }
-                                    if (events.isNotEmpty()) {
-                                        goBack()
-                                    } else {
-                                        AccountActivity.matrixClient!!.room.getLastTimelineEvents(RoomId(roomId))
-                                            .collectLatest { flowFlow ->
-                                                Log.d("More events", "Collecting new event stream.")
-                                                flowFlow?.collectLatest { flow ->
-                                                    val event = flow.first()
-                                                    event?.let { handleEvent(it.event) }
-                                                    event?.content?.onSuccess {
-                                                        //Log.d("Decrypt?", it.toString())
-                                                    }?.onFailure {
-                                                        it.printStackTrace()
-                                                    }
-                                                }
-                                            }
-                                        goBack()
-                                    }
-                                }
-                            }
-                            Row(modifier = Modifier.navigationBarsPadding().imePadding()) {
-                                val message = remember { mutableStateOf("") }
-                                TextField(
-                                    value = message.value,
-                                    onValueChange = {
-                                        message.value = it
-                                    }
-                                )
-                            }
-                        }
+            intent.getStringExtra("room")?.let { roomId ->
+                AccountActivity.matrixClient?.let {
+                    val state by remember { mutableStateOf(ChatRoomState(
+                        roomId = RoomId(roomId),
+                        client = it
+                    )) }
+                    RoomUI(
+                        roomState = state,
+                        modifier = Modifier,
+                        applicationContext = applicationContext
+                    )
+                    LaunchedEffect(roomId) {
+                        state.fetchMessages()
                     }
-                }
-            }
-        }
-    }
-
-    @Composable
-    fun InfiniteScrollHandler(
-        listState: LazyListState, buffer: Int = 5, action: () -> Unit
-    ) {
-        var lastTotalItems = -1
-        val loadMore = remember {
-            derivedStateOf {
-                val layoutInfo = listState.layoutInfo
-                val totalItemsNumber = layoutInfo.totalItemsCount
-                val lastVisibleItemIndex = (layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0) + 1
-                val loadMore =
-                    lastVisibleItemIndex > (totalItemsNumber - buffer) && (lastTotalItems != totalItemsNumber)
-
-                loadMore
-            }
-        }
-        LaunchedEffect(loadMore) {
-            snapshotFlow { loadMore.value }
-                .distinctUntilChanged()
-                .collect {
-                    if (it) {
-                        lastTotalItems = listState.layoutInfo.totalItemsCount
-                        action()
-                    }
-                }
-        }
-    }
-
-    @Composable
-    fun EventBlock(roomId: RoomId, eventIds: List<Event.RoomEvent<*>>, userId: UserId) {
-        Row {
-            val bytes = remember { mutableStateOf<ByteArray?>(null) }
-            bytes.value?.let {
-                Log.d("Channel Image", "Drawing image...")
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(it)
-                        .crossfade(true)
-                        .decoderFactory(BitmapFactoryDecoder.Factory())
-                        .build(),
-                    contentScale = ContentScale.Fit,
-                    contentDescription = null,
-                    modifier = Modifier.size(48.dp).clip(CircleShape)
-                )
-            } ?: Box(
-                modifier = Modifier.size(48.dp).clip(CircleShape).background(Color.Cyan)
-            )
-
-            LaunchedEffect(roomId, eventIds) {
-                AccountActivity.matrixClient!!.api.users.getAvatarUrl(userId)
-                    .onSuccess {
-                        it?.let { url ->
-                            AccountActivity.matrixClient!!.api.media.download(url)
-                                .onSuccess { media ->
-                                    val length = media.contentLength!!.toInt()
-                                    val byteArray = ByteArray(length)
-                                    media.content.readFully(byteArray, 0, length)
-                                    Log.d("Image type", media.contentType.toString())
-                                    bytes.value = byteArray
-                                }
-                        }
-
-                    }
-            }
-
-            Column {
-                Text(userId.full, fontSize = 14.sp)
-                eventIds.reversed().forEach { event ->
-                    Text(parseEvent(event.content))
                 }
             }
         }

@@ -55,7 +55,10 @@ class MainActivity : AppCompatActivity() {
         setContent {
             Column {
                 val allRooms = remember { mutableStateOf(emptyMap<RoomId, Room?>()) }
-                SettingsDropdown()
+                SettingsDropdown(applicationContext, refresh = {
+                    startActivity(Intent(applicationContext, MainActivity::class.java))
+                    finish()
+                })
                 AccountActivity.matrixClient?.let { client ->
                     AllRooms(allRooms.value.values.stream().map {
                         RoomInfo(
