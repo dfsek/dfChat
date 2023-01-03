@@ -82,6 +82,7 @@ fun UserInput(
             })
             Button(onClick = {
                 onMessageSent(input)
+                input = ""
             }) {
                 Text("Send")
             }
