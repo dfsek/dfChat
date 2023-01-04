@@ -79,8 +79,10 @@ fun UserInput(
                 input = it
             })
             Button(onClick = {
-                onMessageSent(input)
-                input = ""
+                if(input.trim().isNotEmpty()) {
+                    onMessageSent(input)
+                    input = ""
+                }
             }) {
                 Text("Submit")
             }
