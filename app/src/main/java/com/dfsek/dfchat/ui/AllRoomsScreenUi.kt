@@ -25,7 +25,6 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
-import com.dfsek.dfchat.AccountActivity
 import com.dfsek.dfchat.RoomActivity
 import com.dfsek.dfchat.SettingsDropdown
 import com.dfsek.dfchat.parseEvent

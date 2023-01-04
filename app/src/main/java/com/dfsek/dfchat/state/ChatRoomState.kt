@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import net.folivo.trixnity.client.MatrixClient
 import net.folivo.trixnity.client.getEventId
+import net.folivo.trixnity.client.key
 import net.folivo.trixnity.client.room
 import net.folivo.trixnity.client.room.message.text
 import net.folivo.trixnity.client.store.TimelineEvent
@@ -26,7 +27,6 @@ class ChatRoomState(
 ) {
     private val events: MutableList<TimelineEvent> = mutableStateListOf()
     private val mappedEvents: MutableMap<EventId, TimelineEvent> = mutableStateMapOf()
-    private var oldestTimelineEvent: TimelineEvent? = null
     private var newestEvent: EventId? = null
     private val listener: suspend (Event<*>) -> Unit = {
         if(it is Event.RoomEvent<*> && it.roomId == roomId) {
@@ -91,6 +91,11 @@ class ChatRoomState(
             }
             getPrevious(events().last().eventId, 0)
         }
+    }
+
+    suspend fun clear() {
+        mappedEvents.clear()
+        fetchMessages()
     }
 
     fun startSync() {

@@ -1,6 +1,5 @@
 package com.dfsek.dfchat
 
-import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -14,23 +13,19 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.core.content.ContextCompat.startActivity
 import arrow.core.flatMap
+import com.dfsek.dfchat.ui.settings.SettingsActivity
 import io.ktor.http.*
 import kotlinx.coroutines.CoroutineScope
 import net.folivo.trixnity.client.MatrixClient
 import net.folivo.trixnity.client.MatrixClientConfiguration
+import net.folivo.trixnity.client.key.DeviceTrustLevel
 import net.folivo.trixnity.client.loginWith
 import net.folivo.trixnity.client.media.MediaStore
 import net.folivo.trixnity.client.store.Room
 import net.folivo.trixnity.clientserverapi.model.authentication.IdentifierType
 import net.folivo.trixnity.clientserverapi.model.authentication.LoginType
-import net.folivo.trixnity.core.model.UserId
-import net.folivo.trixnity.core.model.events.DecryptedOlmEvent
-import net.folivo.trixnity.core.model.events.Event
 import net.folivo.trixnity.core.model.events.EventContent
-import net.folivo.trixnity.core.model.events.RoomEventContent
 import net.folivo.trixnity.core.model.events.m.room.EncryptedEventContent
 import net.folivo.trixnity.core.model.events.m.room.MemberEventContent
 import net.folivo.trixnity.core.model.events.m.room.Membership
@@ -164,6 +159,14 @@ fun SettingsDropdown(applicationContext: Context, current: Context, refresh: () 
 
 fun <E> List<E>.update(value: E, index: Int): List<E> {
     return mapIndexed { i, e -> if (i == index) value else e }
+}
+
+fun DeviceTrustLevel.userString(): String = when(this) {
+    is DeviceTrustLevel.Verified -> "Verified"
+    is DeviceTrustLevel.Blocked -> "Blocked"
+    is DeviceTrustLevel.NotVerified -> "Unverified"
+    is DeviceTrustLevel.NotCrossSigned -> "Not Cross-Signed"
+    is DeviceTrustLevel.Invalid -> "Invalid: " + this.reason
 }
 
 internal const val SSO_REDIRECT_PATH = "/_matrix/client/r0/login/sso/redirect"

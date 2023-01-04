@@ -98,6 +98,7 @@ fun RoomTopBar(name: String, modifier: Modifier, applicationContext: Context, ac
         SettingsDropdown(applicationContext, activity, refresh = {
             scope.launch {
                 Log.d("Fetching", "more messages")
+                state.clear()
                 state.fetchMessages()
             }
         })
@@ -159,7 +160,20 @@ fun MessageBlock(
         Column {
             Text(userId.full, fontSize = 14.sp)
             timelineEvents.forEach { event ->
-                Text(parseEvent(event.event.content))
+                var content by remember { mutableStateOf(parseEvent(event.event.content)) }
+
+                LaunchedEffect(event) {
+                    event.content
+                        ?.onSuccess {
+                            Log.d("Decrypted event", it.toString())
+                            content = parseEvent(it)
+                        }?.onFailure {
+                            Log.e("Decrypted event", "Failure")
+                            it.printStackTrace()
+                        }
+                }
+
+                Text(content)
             }
         }
     }

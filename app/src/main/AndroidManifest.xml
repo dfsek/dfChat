@@ -38,7 +38,7 @@
                     android:value=""/>
         </activity>
         <activity
-                android:name=".SettingsActivity"
+                android:name=".ui.settings.SettingsActivity"
                 android:exported="true"
                 android:theme="@style/Theme.DfChat.NoActionBar">
 
@@ -47,7 +47,16 @@
                     android:value=""/>
         </activity>
         <activity
-                android:name=".AccountActivity"
+                android:name=".ui.settings.VerificationActivity"
+                android:exported="true"
+                android:theme="@style/Theme.DfChat.NoActionBar">
+
+            <meta-data
+                    android:name="android.app.lib_name"
+                    android:value=""/>
+        </activity>
+        <activity
+                android:name=".ui.settings.AccountActivity"
                 android:exported="true"
                 android:theme="@style/Theme.DfChat.NoActionBar">
             <meta-data

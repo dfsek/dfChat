@@ -1,12 +1,8 @@
 package com.dfsek.dfchat.state
 
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.dfsek.dfchat.AccountActivity
 import com.dfsek.dfchat.login
 import io.ktor.http.*
 import kotlinx.coroutines.CoroutineScope

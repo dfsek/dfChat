@@ -1,5 +1,6 @@
-package com.dfsek.dfchat
+package com.dfsek.dfchat.ui.settings
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
@@ -12,6 +13,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.Modifier
+import kotlin.reflect.KClass
 
 class SettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,19 +28,21 @@ class SettingsActivity : AppCompatActivity() {
     fun Settings() {
         LazyColumn {
             item {
-                Account()
+                SettingsItem("Account", AccountActivity::class)
+            }
+            item {
+                SettingsItem("Verification", VerificationActivity::class)
             }
         }
     }
 
     @Composable
-    @Preview
-    fun Account() {
+    fun SettingsItem(text: String, activity: KClass<out Activity>) {
         Row(modifier = Modifier.clickable {
-            startActivity(Intent(applicationContext, AccountActivity::class.java))
+            startActivity(Intent(applicationContext, activity.java))
             finish()
         }) {
-            Text("Account", fontSize = 30.sp)
+            Text(text, fontSize = 30.sp)
         }
     }
 }
