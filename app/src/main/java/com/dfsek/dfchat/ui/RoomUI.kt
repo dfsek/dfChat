@@ -6,32 +6,30 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.sp
-import com.dfsek.dfchat.state.ChatRoomState
-import com.dfsek.dfchat.SettingsDropdown
-import net.folivo.trixnity.client.store.TimelineEvent
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Button
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
-import com.dfsek.dfchat.AccountActivity
+import com.dfsek.dfchat.SettingsDropdown
 import com.dfsek.dfchat.parseEvent
+import com.dfsek.dfchat.state.ChatRoomState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import net.folivo.trixnity.client.store.TimelineEvent
 import net.folivo.trixnity.core.model.UserId
 
 @Composable
@@ -84,7 +82,7 @@ fun UserInput(
                 onMessageSent(input)
                 input = ""
             }) {
-                Text("Send")
+                Text("Submit")
             }
         }
     }
@@ -92,14 +90,14 @@ fun UserInput(
 
 @Composable
 fun RoomTopBar(name: String, modifier: Modifier, applicationContext: Context, state: ChatRoomState, scope: CoroutineScope) {
-    Row(modifier = modifier) {
+    Row(modifier = modifier.background(Color.White).fillMaxWidth()) {
         SettingsDropdown(applicationContext, refresh = {
             scope.launch {
                 Log.d("Fetching", "more messages")
                 state.fetchMessages()
             }
         })
-        Text(name, fontSize = 32.sp)
+        Text(name, fontSize = 24.sp)
     }
 }
 
