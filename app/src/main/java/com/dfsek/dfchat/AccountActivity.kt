@@ -17,7 +17,6 @@ import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -25,6 +24,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import arrow.core.left
+import arrow.core.right
 import coil.compose.AsyncImage
 import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
@@ -34,24 +35,21 @@ import com.dfsek.dfchat.state.UserState
 import io.ktor.http.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import net.folivo.trixnity.client.MatrixClient
-import net.folivo.trixnity.client.fromStore
-import net.folivo.trixnity.client.media.InMemoryMediaStore
-import net.folivo.trixnity.client.room
-import net.folivo.trixnity.client.room.message.text
-import net.folivo.trixnity.client.store.repository.realm.createRealmRepositoriesModule
+import net.folivo.trixnity.client.key
+import net.folivo.trixnity.client.user
+import net.folivo.trixnity.client.verification
+import net.folivo.trixnity.client.verification.*
 import net.folivo.trixnity.clientserverapi.client.MatrixClientServerApiClientImpl
-import net.folivo.trixnity.clientserverapi.client.SyncState
 import net.folivo.trixnity.clientserverapi.model.authentication.LoginType
-import net.folivo.trixnity.core.model.RoomId
-import net.folivo.trixnity.core.model.events.Event
-import net.folivo.trixnity.core.model.events.m.room.RoomMessageEventContent
-import net.folivo.trixnity.core.subscribe
+import net.folivo.trixnity.core.model.events.m.key.verification.VerificationMethod
 import kotlin.streams.toList
 
 
@@ -97,6 +95,11 @@ class AccountActivity : AppCompatActivity() {
         Column {
             val userState = remember { UserState(matrixClient) }
             var avatar: ByteArray? by remember { mutableStateOf(null) }
+            var verificationString by remember {
+                mutableStateOf<Pair<ActiveSasVerificationState.ComparisonByUser, String>?>(
+                    null
+                )
+            }
 
             LaunchedEffect(matrixClient) {
                 userState.getAvatar {
@@ -127,6 +130,62 @@ class AccountActivity : AppCompatActivity() {
                 finish()
             }) {
                 Text("Log Out")
+            }
+
+            if (verificationString != null) {
+                Text(text = verificationString!!.second)
+                Button(onClick = {
+                    CoroutineScope(Dispatchers.Default).launch {
+                        verificationString!!.first.match()
+                    }
+                }) {
+                    Text("Emojis are real?")
+                }
+            }
+
+
+            LaunchedEffect(matrixClient) {
+                launch {
+                    matrixClient.verification.getSelfVerificationMethods()
+                        .collectLatest {
+                            if (it is VerificationService.SelfVerificationMethods.CrossSigningEnabled) {
+                                it.methods
+                                    .forEach {
+                                        Log.d("Verification method", it.toString())
+                                        if (it is SelfVerificationMethod.CrossSignedDeviceVerification) {
+                                            it.createDeviceVerification()
+                                                .onSuccess {
+                                                    Log.d("Starting verification", it.toString())
+                                                    launch {
+                                                        it.state
+                                                            .collectLatest {
+                                                                Log.d("Verification status", it.toString())
+                                                                if(it is ActiveVerificationState.Ready) {
+                                                                    it.start(VerificationMethod.Sas)
+                                                                } else if(it is ActiveVerificationState.Start) {
+                                                                    val clientSasVerification = it.method as ActiveSasVerificationMethod
+                                                                    clientSasVerification
+                                                                        .state
+                                                                        .collectLatest {
+                                                                            if(it is ActiveSasVerificationState.ComparisonByUser) {
+                                                                                Log.d("Verification status", it.toString())
+                                                                                verificationString = Pair(
+                                                                                    it,
+                                                                                    it.emojis.map { it.second }.joinToString(",")
+                                                                                )
+                                                                            }
+                                                                        }
+                                                                }
+                                                            }
+                                                    }
+
+
+                                                }
+                                        }
+                                    }
+                            }
+                        }
+                }
             }
         }
     }
