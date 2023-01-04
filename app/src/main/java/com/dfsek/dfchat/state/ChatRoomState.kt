@@ -79,6 +79,29 @@ class ChatRoomState(
             }
     }
 
+    suspend fun getRoomAvatar(consume: suspend (ByteArray) -> Unit) {
+        client.room.getById(roomId)
+            .collectLatest { room ->
+                if (room != null) {
+                    room.avatarUrl?.let { url ->
+                        client.api.media.download(url)
+                            .onSuccess {
+                                val bytes = ByteArray(it.contentLength!!.toInt())
+                                it.content.readFully(bytes, 0, it.contentLength!!.toInt())
+                                consume(bytes)
+                            }
+                    }
+                }
+            }
+    }
+
+    suspend fun getLastMessage(consumer: suspend (TimelineEvent) -> Unit) {
+        client.room.getLastTimelineEvent(roomId)
+            .collectLatest {
+                it?.first()?.let { consumer(it) }
+            }
+    }
+
     suspend fun sendTextMessage(message: String) {
         Log.d("Sending Message", message)
         client.room.sendMessage(roomId) {
