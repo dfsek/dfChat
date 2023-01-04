@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.dfsek.dfchat.state.ChatRoomState
+import com.dfsek.dfchat.state.LoginState
 import com.dfsek.dfchat.ui.RoomUI
 import net.folivo.trixnity.core.model.RoomId
 
@@ -19,7 +20,7 @@ class RoomActivity : AppCompatActivity() {
 
         setContent {
             intent.getStringExtra("room")?.let { roomId ->
-                AccountActivity.matrixClient?.let {
+                LoginState.matrixClient?.let {
                     val state = remember {
                         ChatRoomState(
                             roomId = RoomId(roomId),
@@ -33,7 +34,8 @@ class RoomActivity : AppCompatActivity() {
                     RoomUI(
                         roomState = state,
                         modifier = Modifier,
-                        applicationContext = applicationContext
+                        applicationContext = applicationContext,
+                        activity = this
                     )
                     LaunchedEffect(roomId) {
                         state.fetchMessages()

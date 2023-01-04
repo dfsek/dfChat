@@ -1,5 +1,6 @@
 package com.dfsek.dfchat.ui
 
+import android.app.Activity
 import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.background
@@ -37,6 +38,7 @@ fun RoomUI(
     roomState: ChatRoomState,
     modifier: Modifier,
     applicationContext: Context,
+    activity: Activity
 ) {
     val scrollState = rememberLazyListState()
     val scope = rememberCoroutineScope()
@@ -61,7 +63,7 @@ fun RoomUI(
                 }
             }
 
-            RoomTopBar(roomName, Modifier.statusBarsPadding(), applicationContext, roomState, scope)
+            RoomTopBar(roomName, Modifier.statusBarsPadding(), applicationContext, activity, roomState, scope)
         }
     }
 }
@@ -91,9 +93,9 @@ fun UserInput(
 }
 
 @Composable
-fun RoomTopBar(name: String, modifier: Modifier, applicationContext: Context, state: ChatRoomState, scope: CoroutineScope) {
+fun RoomTopBar(name: String, modifier: Modifier, applicationContext: Context, activity: Activity, state: ChatRoomState, scope: CoroutineScope) {
     Row(modifier = modifier.background(Color.White).fillMaxWidth()) {
-        SettingsDropdown(applicationContext, refresh = {
+        SettingsDropdown(applicationContext, activity, refresh = {
             scope.launch {
                 Log.d("Fetching", "more messages")
                 state.fetchMessages()

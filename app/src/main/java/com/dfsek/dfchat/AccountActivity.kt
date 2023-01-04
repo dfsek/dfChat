@@ -15,6 +15,7 @@ import androidx.compose.material.TextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.tooling.preview.Preview
 import com.dfsek.dfchat.*
+import com.dfsek.dfchat.state.LoginState
 import io.ktor.http.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -47,31 +48,18 @@ class AccountActivity : AppCompatActivity() {
         if (token != null) {
             val homeserver = intent.data!!.getQueryParameter("homeserver").toString()
             Log.d("SVR", homeserver)
-            val mediaStore = InMemoryMediaStore()
 
-            val repositoriesModule = createRealmRepositoriesModule()
-
-            val coroutineScope = CoroutineScope(Dispatchers.Default)
-
-            coroutineScope.launch {
+            CoroutineScope(Dispatchers.Default).launch {
                 Log.i("Accounts", "Signing in to matrix account")
                 try {
-                    matrixClient = MatrixClient.login(
-                        baseUrl = Url(homeserver),
-                        identifier = null,
-                        passwordOrToken = token,
-                        loginType = LoginType.Token,
-                        mediaStore = mediaStore,
-                        deviceId = "dfchat",
-                        repositoriesModule = repositoriesModule,
-                        scope = coroutineScope
-                    ).getOrThrow()
+                    LoginState.logInToken(Url(homeserver), token)
 
                     runOnUiThread {
                         startActivity(Intent(applicationContext, MainActivity::class.java))
                         finish()
                     }
-                    matrixClient?.startSync()
+
+                    LoginState.matrixClient?.startSync()
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
@@ -163,28 +151,9 @@ class AccountActivity : AppCompatActivity() {
     }
 
     companion object {
-        init {
-            tryLogIn()
-        }
-
-        @JvmStatic
-        var matrixClient: MatrixClient? by mutableStateOf(null)
-            private set
-
         fun redirectIntent(context: Context, data: Uri?): Intent {
             return Intent(context, AccountActivity::class.java).apply {
                 setData(data)
-            }
-        }
-
-        private fun tryLogIn() {
-            CoroutineScope(Dispatchers.Default).launch {
-                matrixClient = MatrixClient.fromStore(
-                    repositoriesModule = createRealmRepositoriesModule(),
-                    mediaStore = InMemoryMediaStore(),
-                    scope = CoroutineScope(Dispatchers.Default),
-                ).getOrThrow()
-                matrixClient?.startSync()
             }
         }
     }

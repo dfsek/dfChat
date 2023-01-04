@@ -17,23 +17,23 @@ class SettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            settings()
+            Settings()
         }
     }
 
     @Composable
     @Preview
-    fun settings() {
+    fun Settings() {
         LazyColumn {
             item {
-                account()
+                Account()
             }
         }
     }
 
     @Composable
     @Preview
-    fun account() {
+    fun Account() {
         Row(modifier = Modifier.clickable {
             startActivity(Intent(applicationContext, AccountActivity::class.java))
             finish()

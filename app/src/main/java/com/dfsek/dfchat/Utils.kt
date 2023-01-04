@@ -119,7 +119,7 @@ fun Room.getHumanName(): String =
 
 
 @Composable
-fun SettingsDropdown(applicationContext: Context, refresh: () -> Unit = {}) {
+fun SettingsDropdown(applicationContext: Context, current: Context, refresh: () -> Unit = {}) {
     Box(
         contentAlignment = Alignment.Center
     ) {
@@ -142,7 +142,7 @@ fun SettingsDropdown(applicationContext: Context, refresh: () -> Unit = {}) {
         ) {
             DropdownMenuItem(
                 onClick = {
-                    applicationContext.startActivity(Intent(applicationContext, SettingsActivity::class.java))
+                    current.startActivity(Intent(applicationContext, SettingsActivity::class.java))
                     expanded = false
                 },
                 enabled = true

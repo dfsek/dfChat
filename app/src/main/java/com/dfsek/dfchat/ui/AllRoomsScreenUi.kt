@@ -29,6 +29,7 @@ import com.dfsek.dfchat.AccountActivity
 import com.dfsek.dfchat.RoomActivity
 import com.dfsek.dfchat.SettingsDropdown
 import com.dfsek.dfchat.parseEvent
+import com.dfsek.dfchat.state.LoginState
 import com.dfsek.dfchat.state.RoomsState
 import kotlinx.coroutines.launch
 import net.folivo.trixnity.client.store.Room
@@ -37,14 +38,14 @@ import net.folivo.trixnity.client.store.Room
 @Composable
 fun AllRoomsScreen(activity: Activity, applicationContext: Context) {
     Column {
-        SettingsDropdown(applicationContext)
+        SettingsDropdown(applicationContext, activity)
         RoomList(activity)
     }
 }
 
 @Composable
 fun RoomList(activity: Activity) {
-    AccountActivity.matrixClient?.let {
+    LoginState.matrixClient?.let {
         val scope = rememberCoroutineScope()
         val roomsState = remember { RoomsState(it, scope) }
         LazyColumn {
