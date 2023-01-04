@@ -2,17 +2,22 @@ package com.dfsek.dfchat.state
 
 import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import com.dfsek.dfchat.getHumanName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import net.folivo.trixnity.client.MatrixClient
+import net.folivo.trixnity.client.getEventId
 import net.folivo.trixnity.client.room
 import net.folivo.trixnity.client.room.message.text
-import net.folivo.trixnity.client.store.Room
 import net.folivo.trixnity.client.store.TimelineEvent
 import net.folivo.trixnity.core.model.EventId
 import net.folivo.trixnity.core.model.RoomId
 import net.folivo.trixnity.core.model.UserId
+import net.folivo.trixnity.core.model.events.Event
 import okhttp3.internal.toImmutableList
 
 class ChatRoomState(
@@ -20,6 +25,39 @@ class ChatRoomState(
     val client: MatrixClient,
 ) {
     private val events: MutableList<TimelineEvent> = mutableStateListOf()
+    private val mappedEvents: MutableMap<EventId, TimelineEvent> = mutableStateMapOf()
+    private var oldestTimelineEvent: TimelineEvent? = null
+    private var newestEvent: EventId? = null
+    private val listener: suspend (Event<*>) -> Unit = {
+        if(it is Event.RoomEvent<*> && it.roomId == roomId) {
+            CoroutineScope(Dispatchers.Default).launch {
+                client.room.getTimelineEvent(it.id, roomId)
+                    .collectLatest {
+                        if (it != null) {
+                            Log.d("Received new event", it.toString())
+                            mappedEvents[it.eventId] = it
+                            rescanEvents()
+                        }
+                    }
+            }
+        }
+    }
+
+    private fun rescanEvents() {
+        mappedEvents.values.stream().reduce { e, e2 ->
+             if(e.event.originTimestamp > e2.event.originTimestamp) e else e2
+        }.ifPresent {
+            newestEvent = it.eventId
+        }
+    }
+
+    private fun getEventList_(current: List<TimelineEvent>): List<TimelineEvent> {
+        return current.first().previousEventId?.let { previous -> mappedEvents[previous]?.let { getEventList_(listOf(it)) }?.plus(current) } ?: current
+    }
+
+    fun getEventList(): List<TimelineEvent> {
+        return newestEvent?.let { eventId -> mappedEvents[eventId]?.let { getEventList_(listOf(it)) } } ?: emptyList()
+    }
 
     suspend fun fetchMessages() {
         if (events.isEmpty()) {
@@ -28,6 +66,8 @@ class ChatRoomState(
                     flowFlow?.collectLatest { eventUnwrapped ->
                         Log.d("Event added", eventUnwrapped.toString())
                         events.add(eventUnwrapped)
+                        mappedEvents[eventUnwrapped.eventId] = eventUnwrapped
+                        rescanEvents()
                         if(eventUnwrapped.gap != null) {
                             client.room.fillTimelineGaps(eventUnwrapped.eventId, roomId)
                         }
@@ -41,6 +81,8 @@ class ChatRoomState(
                         it?.let { eventUnwrapped ->
                             Log.d("Late Event added", eventUnwrapped.toString())
                             events.add(eventUnwrapped)
+                            mappedEvents[eventUnwrapped.eventId] = eventUnwrapped
+                            rescanEvents()
                             if (count < 20) {
                                 eventUnwrapped.previousEventId?.let { it1 -> getPrevious(it1, count + 1) }
                             }
@@ -51,6 +93,14 @@ class ChatRoomState(
         }
     }
 
+    fun startSync() {
+        client.api.sync.subscribeAllEvents(listener)
+    }
+
+    fun stopSync() {
+        client.api.sync.unsubscribeAllEvents(listener)
+    }
+
     fun events(): List<TimelineEvent> = events.toImmutableList()
 
     fun splitEvents(): List<Pair<UserId, List<TimelineEvent>>> {
@@ -58,7 +108,7 @@ class ChatRoomState(
 
         var lastUserId: UserId? = null
 
-        events().forEach {
+        getEventList().forEach {
             if (lastUserId != null && it.event.sender == lastUserId) {
                 list.last().second.add(it)
             } else {
@@ -67,7 +117,7 @@ class ChatRoomState(
             lastUserId = it.event.sender
         }
 
-        return list
+        return list.reversed()
     }
 
     suspend fun getName(consumer: suspend (String) -> Unit) {

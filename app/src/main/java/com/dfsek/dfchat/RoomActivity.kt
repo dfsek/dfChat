@@ -13,16 +13,23 @@ import com.dfsek.dfchat.ui.RoomUI
 import net.folivo.trixnity.core.model.RoomId
 
 class RoomActivity : AppCompatActivity() {
+    private lateinit var chatRoomState: ChatRoomState
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
             intent.getStringExtra("room")?.let { roomId ->
                 AccountActivity.matrixClient?.let {
-                    val state by remember { mutableStateOf(ChatRoomState(
-                        roomId = RoomId(roomId),
-                        client = it
-                    )) }
+                    val state = remember {
+                        ChatRoomState(
+                            roomId = RoomId(roomId),
+                            client = it
+                        ).also {
+                            it.startSync()
+                            chatRoomState = it
+                        }
+
+                    }
                     RoomUI(
                         roomState = state,
                         modifier = Modifier,
@@ -33,6 +40,13 @@ class RoomActivity : AppCompatActivity() {
                     }
                 }
             }
+        }
+    }
+
+    override fun finish() {
+        super.finish()
+        if(this::chatRoomState.isInitialized) {
+            chatRoomState.stopSync()
         }
     }
 }
