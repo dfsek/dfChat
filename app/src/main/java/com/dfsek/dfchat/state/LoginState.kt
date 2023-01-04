@@ -39,6 +39,14 @@ class LoginState {
             }
         }
 
+        suspend fun logout() {
+            val client = matrixClient
+            if (client != null) {
+                client.logout()
+                matrixClient = null
+            }
+        }
+
         suspend fun logInToken(baseUrl: Url, token: String) {
             matrixClient = MatrixClient.login(
                 baseUrl = baseUrl,
