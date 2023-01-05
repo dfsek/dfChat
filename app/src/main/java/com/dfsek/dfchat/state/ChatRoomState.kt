@@ -169,10 +169,12 @@ class ChatRoomState(
 
     suspend fun sendTextMessage(message: String) {
         Log.d("Sending Message", message)
+        client.room.getById(roomId).first()?.encryptionAlgorithm?.let {
+            Log.d("Room Encryption", it.toString())
+        }
         client.room.sendMessage(roomId) {
             text(message)
         }
-
     }
 
     suspend fun getAvatar(id: UserId, consume: suspend (ByteArray) -> Unit) {
