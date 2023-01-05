@@ -10,6 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import net.folivo.trixnity.client.MatrixClient
 import net.folivo.trixnity.client.fromStore
+import net.folivo.trixnity.client.key
 import net.folivo.trixnity.client.media.InMemoryMediaStore
 import net.folivo.trixnity.client.store.repository.realm.createRealmRepositoriesModule
 import net.folivo.trixnity.clientserverapi.model.authentication.LoginType
@@ -53,7 +54,9 @@ class LoginState {
                 deviceId = "dfchat",
                 repositoriesModule = createRealmRepositoriesModule(),
                 scope = CoroutineScope(Dispatchers.Default)
-            ).getOrThrow()
+            ).getOrThrow().also {
+                it.key.bootstrapCrossSigning()
+            }
         }
     }
 }

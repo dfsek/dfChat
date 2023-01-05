@@ -120,68 +120,6 @@ class AccountActivity : AppCompatActivity() {
             }) {
                 Text("Log Out")
             }
-
-            var verificationString by remember {
-                mutableStateOf<Pair<ActiveSasVerificationState.ComparisonByUser, String>?>(
-                    null
-                )
-            }
-
-            if (verificationString != null) {
-                Text(text = verificationString!!.second)
-                Button(onClick = {
-                    CoroutineScope(Dispatchers.Default).launch {
-                        verificationString!!.first.match()
-                    }
-                }) {
-                    Text("Emojis are real?")
-                }
-            }
-
-
-            LaunchedEffect(matrixClient) {
-                launch {
-                    matrixClient.verification.getSelfVerificationMethods()
-                        .collectLatest {
-                            if (it is VerificationService.SelfVerificationMethods.CrossSigningEnabled) {
-                                it.methods
-                                    .forEach {
-                                        Log.d("Verification method", it.toString())
-                                        if (it is SelfVerificationMethod.CrossSignedDeviceVerification) {
-                                            it.createDeviceVerification()
-                                                .onSuccess {
-                                                    Log.d("Starting verification", it.toString())
-                                                    launch {
-                                                        it.state
-                                                            .collectLatest {
-                                                                Log.d("Verification status", it.toString())
-                                                                if(it is ActiveVerificationState.Ready) {
-                                                                    it.start(VerificationMethod.Sas)
-                                                                } else if(it is ActiveVerificationState.Start) {
-                                                                    val clientSasVerification = it.method as ActiveSasVerificationMethod
-                                                                    clientSasVerification
-                                                                        .state
-                                                                        .collectLatest {
-                                                                            if(it is ActiveSasVerificationState.ComparisonByUser) {
-                                                                                Log.d("Verification status", it.toString())
-                                                                                verificationString = Pair(
-                                                                                    it,
-                                                                                    it.emojis.map { it.second }.joinToString(",")
-                                                                                )
-                                                                            }
-                                                                        }
-                                                                }
-                                                            }
-                                                    }
-
-
-                                                }
-                                        }
-                                    }
-                            }
-                        }
-                }
-            }
         }
     }
 
