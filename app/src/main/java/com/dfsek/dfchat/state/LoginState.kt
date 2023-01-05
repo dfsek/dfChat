@@ -7,11 +7,13 @@ import com.dfsek.dfchat.login
 import io.ktor.http.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import net.folivo.trixnity.client.MatrixClient
 import net.folivo.trixnity.client.fromStore
 import net.folivo.trixnity.client.media.InMemoryMediaStore
 import net.folivo.trixnity.client.store.repository.realm.createRealmRepositoriesModule
+import net.folivo.trixnity.clientserverapi.client.SyncState
 
 class LoginState {
     companion object {
@@ -25,12 +27,14 @@ class LoginState {
 
         private fun tryLogIn() {
             CoroutineScope(Dispatchers.Default).launch {
-                matrixClient = MatrixClient.fromStore(
+                val matrixClient = MatrixClient.fromStore(
                     repositoriesModule = createRealmRepositoriesModule(),
                     mediaStore = InMemoryMediaStore(),
                     scope = CoroutineScope(Dispatchers.Default),
                 ).getOrThrow()
                 matrixClient?.startSync()
+                matrixClient?.syncState?.first { it == SyncState.RUNNING }
+                this@Companion.matrixClient = matrixClient
             }
         }
 
@@ -43,7 +47,7 @@ class LoginState {
         }
 
         suspend fun logInToken(baseUrl: Url, token: String) {
-            matrixClient = MatrixClient.login(
+            val matrixClient = MatrixClient.login(
                 baseUrl = baseUrl,
                 identifier = null,
                 token = token,
@@ -51,9 +55,10 @@ class LoginState {
                 deviceId = "dfchat",
                 repositoriesModule = createRealmRepositoriesModule(),
                 scope = CoroutineScope(Dispatchers.Default)
-            ).getOrThrow().also {
-                it.startSync()
-            }
+            ).getOrThrow()
+            matrixClient.startSync()
+            matrixClient.syncState.first { it == SyncState.RUNNING }
+            this.matrixClient = matrixClient
         }
     }
 }
