@@ -19,17 +19,29 @@ import net.folivo.trixnity.core.model.EventId
 import net.folivo.trixnity.core.model.RoomId
 import net.folivo.trixnity.core.model.UserId
 import net.folivo.trixnity.core.model.events.Event
+import net.folivo.trixnity.core.model.events.RedactedMessageEventContent
+import net.folivo.trixnity.core.model.events.m.room.RedactionEventContent
 import okhttp3.internal.toImmutableList
 
 class ChatRoomState(
     val roomId: RoomId,
     val client: MatrixClient,
 ) {
-    private val events: MutableList<TimelineEvent> = mutableStateListOf()
     private val mappedEvents: MutableMap<EventId, TimelineEvent> = mutableStateMapOf()
     private var newestEvent: EventId? = null
     private val listener: suspend (Event<*>) -> Unit = {
         if(it is Event.RoomEvent<*> && it.roomId == roomId) {
+            val content = it.content
+            if(content is RedactionEventContent) {
+                client.room.getTimelineEvent(content.redacts, roomId)
+                    .collectLatest {
+                        if (it != null) {
+                            Log.d("Redacting event:", it.toString())
+                            mappedEvents[it.eventId] = it
+                            rescanEvents()
+                        }
+                    }
+            }
             CoroutineScope(Dispatchers.Default).launch {
                 client.room.getTimelineEvent(it.id, roomId)
                     .collectLatest {
@@ -60,12 +72,11 @@ class ChatRoomState(
     }
 
     suspend fun fetchMessages() {
-        if (events.isEmpty()) {
+        if (mappedEvents.isEmpty()) {
             client.room.getLastTimelineEvent(roomId = roomId)
                 .collectLatest { flowFlow ->
                     flowFlow?.collectLatest { eventUnwrapped ->
                         Log.d("Event added", eventUnwrapped.toString())
-                        events.add(eventUnwrapped)
                         mappedEvents[eventUnwrapped.eventId] = eventUnwrapped
                         rescanEvents()
                         if(eventUnwrapped.gap != null) {
@@ -80,7 +91,6 @@ class ChatRoomState(
                     .collectLatest {
                         it?.let { eventUnwrapped ->
                             Log.d("Late Event added", eventUnwrapped.toString())
-                            events.add(eventUnwrapped)
                             mappedEvents[eventUnwrapped.eventId] = eventUnwrapped
                             rescanEvents()
                             if (count < 20) {
@@ -89,7 +99,7 @@ class ChatRoomState(
                         }
                     }
             }
-            getPrevious(events().last().eventId, 0)
+            getPrevious(getEventList().last().eventId, 0)
         }
     }
 
@@ -106,14 +116,14 @@ class ChatRoomState(
         client.api.sync.unsubscribeAllEvents(listener)
     }
 
-    fun events(): List<TimelineEvent> = events.toImmutableList()
-
     fun splitEvents(): List<Pair<UserId, List<TimelineEvent>>> {
         val list = mutableListOf<Pair<UserId, MutableList<TimelineEvent>>>()
 
         var lastUserId: UserId? = null
 
-        getEventList().forEach {
+        getEventList().filter {
+            it.event.content !is RedactionEventContent && it.event.content !is RedactedMessageEventContent
+        }.forEach {
             if (lastUserId != null && it.event.sender == lastUserId) {
                 list.last().second.add(it)
             } else {
