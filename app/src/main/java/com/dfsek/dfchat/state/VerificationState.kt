@@ -2,6 +2,7 @@ package com.dfsek.dfchat.state
 
 import android.util.Log
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import net.folivo.trixnity.client.MatrixClient
@@ -27,7 +28,16 @@ class VerificationState(val client: MatrixClient) {
             }
     }
 
-    suspend fun maybeDeviceVerification(consumer: (SelfVerificationMethod.CrossSignedDeviceVerification) -> Unit) {
+    suspend fun listenForDevices(consumer: suspend (ActiveVerificationState) -> Unit) {
+        client.verification.activeDeviceVerification
+            .collectLatest {
+                it?.state?.collectLatest {
+                    consumer(it)
+                }
+            }
+    }
+
+    suspend fun maybeDeviceVerification(consumer: suspend (SelfVerificationMethod.CrossSignedDeviceVerification) -> Unit) {
         client.verification.getSelfVerificationMethods()
             .collectLatest {
                 if (it is VerificationService.SelfVerificationMethods.CrossSigningEnabled) {

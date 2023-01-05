@@ -51,8 +51,7 @@ fun openUrlInChromeCustomTab(
 suspend fun MatrixClient.Companion.login(
     baseUrl: Url,
     identifier: IdentifierType? = null,
-    passwordOrToken: String,
-    loginType: LoginType = LoginType.Password,
+    token: String,
     deviceId: String? = null,
     initialDeviceDisplayName: String? = null,
     repositoriesModule: Module,
@@ -68,8 +67,8 @@ suspend fun MatrixClient.Companion.login(
         getLoginInfo = { api ->
             api.authentication.login(
                 identifier = identifier,
-                passwordOrToken = passwordOrToken,
-                type = loginType,
+                token = token,
+                type = LoginType.Token,
                 deviceId = deviceId,
                 initialDeviceDisplayName = initialDeviceDisplayName
             ).flatMap { login ->

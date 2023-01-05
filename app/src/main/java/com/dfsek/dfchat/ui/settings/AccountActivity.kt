@@ -65,8 +65,6 @@ class AccountActivity : AppCompatActivity() {
                         startActivity(Intent(applicationContext, MainActivity::class.java))
                         finish()
                     }
-
-                    LoginState.matrixClient?.startSync()
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }

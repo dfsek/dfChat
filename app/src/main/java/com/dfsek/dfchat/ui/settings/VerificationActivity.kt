@@ -1,30 +1,33 @@
 package com.dfsek.dfchat.ui.settings
 
 import android.os.Bundle
-import android.os.PersistableBundle
 import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.material.Button
 import androidx.compose.material.Divider
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.dfsek.dfchat.openUrlInChromeCustomTab
 import com.dfsek.dfchat.state.VerificationState
-import net.folivo.trixnity.client.MatrixClient
 import net.folivo.trixnity.client.key.DeviceTrustLevel
-import net.folivo.trixnity.client.verification
 import net.folivo.trixnity.clientserverapi.model.devices.Device
 import com.dfsek.dfchat.state.LoginState
 import com.dfsek.dfchat.userString
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import net.folivo.trixnity.client.key
+import net.folivo.trixnity.client.media
+import net.folivo.trixnity.client.room
 import net.folivo.trixnity.client.verification.*
+import net.folivo.trixnity.clientserverapi.client.UIA
+import net.folivo.trixnity.clientserverapi.model.uia.AuthenticationRequest
+import net.folivo.trixnity.clientserverapi.model.uia.AuthenticationType
 import net.folivo.trixnity.core.model.events.m.key.verification.VerificationMethod
 
 class VerificationActivity : AppCompatActivity() {
@@ -34,95 +37,172 @@ class VerificationActivity : AppCompatActivity() {
             LoginState.matrixClient?.let {
                 Column {
                     val state = remember { VerificationState(it) }
-                    var verification by remember {
-                        mutableStateOf<SelfVerificationMethod.CrossSignedDeviceVerification?>(
-                            null
-                        )
-                    }
-
-                    verification?.let {
-                        VerifySelf(it)
-                    }
-
-                    LaunchedEffect(state) {
-                        state.maybeDeviceVerification {
-                            verification = it
-                        }
-                    }
+                    VerifySelf(state)
 
                     Devices(state)
+
+                    BootstrapCrossSigning(state, rememberCoroutineScope())
                 }
             }
         }
     }
 
-    @Composable
-    fun VerifySelf(verification: SelfVerificationMethod.CrossSignedDeviceVerification) {
-        var active by remember { mutableStateOf<ActiveDeviceVerification?>(null) }
-        var error by remember { mutableStateOf("") }
-        val scope = rememberCoroutineScope()
-        Column {
-            active?.let {
-                var verificationString by remember {
-                    mutableStateOf<Pair<ActiveSasVerificationState.ComparisonByUser, String>?>(
-                        null
-                    )
-                }
-
-                if (verificationString != null) {
-                    Text(text = verificationString!!.second)
-                    Button(onClick = {
-                        CoroutineScope(Dispatchers.Default).launch {
-                            verificationString!!.first.match()
-                        }
-                        runOnUiThread {
-                            finish()
-                        }
-                    }) {
-                        Text("Emojis are real?")
+    sealed interface VerifyState<T> {
+        class Ready(override val verificationState: ActiveVerificationState.Ready) : VerifyState<ActiveVerificationState.Ready>{
+            @Composable
+            override fun VerifyUI(state: VerificationState, scope: CoroutineScope) {
+                LaunchedEffect(verificationState) {
+                    scope.launch {
+                        verificationState.start(VerificationMethod.Sas)
                     }
                 }
+            }
+        }
 
-                LaunchedEffect(it) {
-                    it.state
+        class Start(override val verificationState: ActiveVerificationState.Start) : VerifyState<ActiveVerificationState.Start> {
+            @Composable
+            override fun VerifyUI(state: VerificationState, scope: CoroutineScope) {
+                var verificationData by remember { mutableStateOf<Pair<ActiveSasVerificationState.ComparisonByUser, String>?>(null) }
+                val clientSasVerification = verificationState.method as ActiveSasVerificationMethod
+                LaunchedEffect(verificationState) {
+                    clientSasVerification
+                        .state
                         .collectLatest {
-                            launch {
+                            if (it is ActiveSasVerificationState.ComparisonByUser) {
                                 Log.d("Verification status", it.toString())
-                                if (it is ActiveVerificationState.Ready) {
-                                    it.start(VerificationMethod.Sas)
-                                } else if (it is ActiveVerificationState.Start) {
-                                    val clientSasVerification = it.method as ActiveSasVerificationMethod
-                                    clientSasVerification
-                                        .state
-                                        .collectLatest {
-                                            if (it is ActiveSasVerificationState.ComparisonByUser) {
-                                                Log.d("Verification status", it.toString())
-                                                verificationString = Pair(
-                                                    it,
-                                                    it.emojis.map { it.second }.joinToString(",")
-                                                )
-                                            }
-                                        }
-                                }
-
+                                verificationData = Pair(
+                                    it,
+                                    it.emojis.map { it.second }.joinToString(",")
+                                )
+                            } else if(it is ActiveSasVerificationState.TheirSasStart) {
+                                it.accept()
                             }
                         }
                 }
-            } ?: Button(onClick = {
-                scope.launch {
-                    verification.createDeviceVerification()
-                        .onSuccess {
-                            active = it
+                verificationData?.let {
+                    Text(it.second, fontSize = 18.sp)
+                    Button(onClick = {
+                        scope.launch {
+                            it.first.match()
                         }
-                        .onFailure {
-                            error = it.message.toString()
-                            it.printStackTrace()
-                        }
+                    }) {
+                        Text("Emojis Match")
+                    }
                 }
-            }) {
-                Text("Start Verification")
             }
-            Text(error)
+        }
+
+        class TheirRequest(override val verificationState: ActiveVerificationState.TheirRequest) : VerifyState<ActiveVerificationState.TheirRequest> {
+            @Composable
+            override fun VerifyUI(state: VerificationState, scope: CoroutineScope) {
+                Button(onClick = {
+                    scope.launch {
+                        verificationState.ready()
+                    }
+                }) {
+                    Text("Verify device ${verificationState.content.fromDevice}")
+                }
+            }
+        }
+
+        class PartlyDone(override val verificationState: ActiveVerificationState.PartlyDone) : VerifyState<ActiveVerificationState.PartlyDone> {
+            @Composable
+            override fun VerifyUI(state: VerificationState, scope: CoroutineScope) {
+                Text("Waiting for other device...", fontSize = 18.sp)
+            }
+        }
+
+        object Done : VerifyState<ActiveVerificationState.Done> {
+            override val verificationState = ActiveVerificationState.Done
+            @Composable
+            override fun VerifyUI(state: VerificationState, scope: CoroutineScope) {
+
+            }
+        }
+
+        val verificationState: T
+
+        @Composable
+        fun VerifyUI(state: VerificationState, scope: CoroutineScope)
+    }
+
+    @Composable
+    fun VerifySelf(state: VerificationState) {
+        val scope = rememberCoroutineScope()
+
+        var verifyState by remember { mutableStateOf<VerifyState<*>>(VerifyState.Done) }
+        var selfVerification by remember { mutableStateOf<SelfVerificationMethod.CrossSignedDeviceVerification?>(null) }
+
+        Column {
+            LaunchedEffect(state) {
+                scope.launch {
+                    state.listenForDevices {
+                        Log.d("Verification status", it.toString())
+                        verifyState = when(it) {
+                            is ActiveVerificationState.Ready -> VerifyState.Ready(it)
+                            is ActiveVerificationState.Start -> VerifyState.Start(it)
+                            is ActiveVerificationState.TheirRequest -> VerifyState.TheirRequest(it)
+                            is ActiveVerificationState.PartlyDone -> VerifyState.PartlyDone(it)
+                            is ActiveVerificationState.Done -> VerifyState.Done
+                            is ActiveVerificationState.Cancel -> VerifyState.Done
+                            else -> verifyState
+                        }
+                    }
+                }
+                scope.launch {
+                    state.maybeDeviceVerification {
+                        selfVerification = it
+                    }
+                }
+            }
+
+            selfVerification?.let {
+                if(verifyState is VerifyState.Done) {
+                    Button(onClick = {
+                        scope.launch {
+                            it.createDeviceVerification()
+                        }
+                    }) {
+                        Text("Verify This Device")
+                    }
+                }
+            }
+
+            verifyState.VerifyUI(state, scope)
+        }
+    }
+
+    @Composable
+    fun BootstrapCrossSigning(state: VerificationState, scope: CoroutineScope) {
+        var currentState by remember { mutableStateOf<UIA.Step<Unit>?>(null) }
+        Text("WARNING: Bootstrapping cross-signing is a potentially destructive action.")
+        Button(onClick = {
+            scope.launch {
+                val resumed = currentState
+                if(resumed == null) {
+                    val signing = state.client.key.bootstrapCrossSigning().result.getOrThrow()
+
+                    Log.d("Cross-Signing", signing.toString())
+                    if (signing is UIA.Success<*>) {
+                        return@launch
+                    } else if (signing is UIA.Step<*>) {
+                        openUrlInChromeCustomTab(
+                            this@VerificationActivity,
+                            null,
+                            signing.getFallbackUrl(AuthenticationType.SSO).toString()
+                        )
+                        Log.d("Cross-Signing", "Launched WebView")
+                        currentState = signing as UIA.Step<Unit>
+                    }
+                } else {
+                    currentState = null
+                    Log.d("Cross-Signing", "Authenticating with Fallback")
+                    val result = resumed.authenticate(AuthenticationRequest.Fallback).getOrThrow()
+                    Log.d("Cross-Signing", result.toString())
+                }
+            }
+        }) {
+            Text(currentState?.let { "Continue Cross-Signing"} ?: "Bootstrap Cross-Signing")
         }
     }
 
