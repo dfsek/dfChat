@@ -10,8 +10,14 @@ TODO:
  - [x] Persist login
  - [x] Display all joined rooms
  - [x] Room images
- - [ ] Encryption
- - [ ] Open room
+ - [ ] Render message images
+ - [ ] Send images
+ - [ ] Highlight links
+ - [ ] Message editing
+ - [ ] Message redacting
+ - [ ] Cross Signing
+ - [x] Encryption
+ - [x] Open room
  - [ ] Display joined spaces
  - [ ] Space images
  - [ ] Voice calls
