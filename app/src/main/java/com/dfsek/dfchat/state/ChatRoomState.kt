@@ -82,7 +82,9 @@ class ChatRoomState(
 
     fun sendTextMessage(message: String) {
         Log.d("Sending Message", message)
-
+        client.roomService().getRoom(roomId)
+            ?.sendService()
+            ?.sendTextMessage(message)
     }
 
     fun getUserAvatar(id: String): String? {

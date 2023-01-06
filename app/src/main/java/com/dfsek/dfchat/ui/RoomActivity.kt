@@ -137,7 +137,6 @@ class RoomActivity : AppCompatActivity() {
         scrollState: LazyListState,
         modifier: Modifier
     ) {
-        val scope = rememberCoroutineScope()
         Box(modifier = modifier) {
             LazyColumn(
                 state = scrollState,
