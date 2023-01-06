@@ -29,7 +29,6 @@ import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
 import com.dfsek.dfchat.SessionHolder
 import com.dfsek.dfchat.state.ChatRoomState
-import com.dfsek.dfchat.state.RoomsState
 import com.dfsek.dfchat.util.SettingsDropdown
 import com.dfsek.dfchat.util.getRawText
 import kotlinx.coroutines.launch
