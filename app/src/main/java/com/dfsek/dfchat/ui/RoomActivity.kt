@@ -34,6 +34,7 @@ import com.dfsek.dfchat.state.ChatRoomState
 import com.dfsek.dfchat.util.GetText
 import com.dfsek.dfchat.util.SettingsDropdown
 import kotlinx.coroutines.launch
+import org.matrix.android.sdk.api.session.getRoom
 import org.matrix.android.sdk.api.session.room.sender.SenderInfo
 import org.matrix.android.sdk.api.session.room.timeline.TimelineEvent
 
@@ -43,24 +44,24 @@ class RoomActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            val lifecycleOwner = LocalLifecycleOwner.current
             intent.getStringExtra("room")?.let { roomId ->
-                SessionHolder.currentSession?.let {
-                    val state = remember {
-                        ChatRoomState(
-                            roomId = roomId,
-                            client = it,
-                            lifecycleOwner
-                        ).also {
-                            it.startSync()
-                            chatRoomState = it
-                        }
+                SessionHolder.currentSession?.let { session ->
+                    session.getRoom(roomId)?.let {
+                        val state = remember {
+                            ChatRoomState(
+                                room = it,
+                                client = session
+                            ).also {
+                                it.startSync()
+                                chatRoomState = it
+                            }
 
+                        }
+                        RoomUI(
+                            roomState = state,
+                            modifier = Modifier
+                        )
                     }
-                    RoomUI(
-                        roomState = state,
-                        modifier = Modifier
-                    )
                 }
             }
         }
@@ -87,8 +88,9 @@ class RoomActivity : AppCompatActivity() {
                 }
                 var roomName by remember { mutableStateOf("") }
 
-                LaunchedEffect(roomState.roomId) {
-                    roomState.getName {
+                val lifecycleOwner = LocalLifecycleOwner.current
+                LaunchedEffect(roomState) {
+                    roomState.getName(lifecycleOwner) {
                         roomName = it
                     }
                 }

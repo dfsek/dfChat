@@ -33,6 +33,8 @@ import com.dfsek.dfchat.state.RoomsState
 import com.dfsek.dfchat.util.SettingsDropdown
 import com.dfsek.dfchat.util.getRawText
 import kotlinx.coroutines.launch
+import org.matrix.android.sdk.api.session.getRoom
+import org.matrix.android.sdk.api.session.room.RoomSummaryQueryParams
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,46 +56,42 @@ class MainActivity : AppCompatActivity() {
 
     @Composable
     fun RoomList(activity: Activity) {
-        SessionHolder.currentSession?.let {
+        SessionHolder.currentSession?.let { session ->
             val scope = rememberCoroutineScope()
             val lifecycleOwner = LocalLifecycleOwner.current
-            val roomsState = remember { RoomsState(it, scope, lifecycleOwner) }
+            val rooms: MutableMap<String, ChatRoomState> = remember { mutableStateMapOf() }
+            LaunchedEffect(session) {
+                session.roomService().getRoomSummariesLive(RoomSummaryQueryParams.Builder().build())
+                    .observe(lifecycleOwner) {
+                        it.forEach {
+                            scope.launch {
+                                session.getRoom(it.roomId)?.let { it1 ->
+                                    rooms[it.roomId] = ChatRoomState(it1, session)
+                                }
+                            }
+                        }
+
+                    }
+            }
             LazyColumn {
-                items(roomsState.getRooms()) {
-                    RoomEntry(roomsState, it, activity)
+                items(rooms.values.sortedBy { it.latestEvent?.root?.originServerTs }.reversed()) {
+                    Log.d("ROOM", it.room.roomId)
+                    RoomEntry(it, activity)
                 }
             }
         }
     }
 
     @Composable
-    fun RoomEntry(state: RoomsState, room: ChatRoomState, activity: Activity) {
+    fun RoomEntry(room: ChatRoomState, activity: Activity) {
         Row(modifier = Modifier.clickable {
             activity.startActivity(Intent(activity, RoomActivity::class.java).apply {
-                putExtra("room", room.roomId)
+                putExtra("room", room.room.roomId)
             })
         }) {
-            val chatRoomState = state.getRoom(room.roomId)
-            var avatarUrl by remember { mutableStateOf<String?>(null) }
-            var name by remember { mutableStateOf("") }
-            var lastContent by remember { mutableStateOf("") }
-            LaunchedEffect(room) {
-                launch {
-                    chatRoomState.getRoomAvatar {
-                        avatarUrl = it
-                    }
-                }
-                launch {
-                    chatRoomState.getName {
-                        name = it
-                    }
-                }
-                launch {
-                    chatRoomState.getLastMessage {
-                        lastContent = it.getRawText()
-                    }
-                }
-            }
+            val avatarUrl = room.avatarUrl
+            val name = room.name
+            val lastContent = room.lastEvent
 
             avatarUrl?.let {
                 Log.d("Channel Image", "Drawing image...")
@@ -112,8 +110,8 @@ class MainActivity : AppCompatActivity() {
             )
 
             Column {
-                Text(name, fontSize = 18.sp)
-                Text(lastContent, fontSize = 12.sp)
+                Text(name ?: "", fontSize = 18.sp)
+                Text(lastContent?.getRawText() ?: "", fontSize = 12.sp)
             }
         }
     }

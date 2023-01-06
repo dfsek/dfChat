@@ -5,15 +5,16 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.LifecycleOwner
 import com.dfsek.dfchat.util.getAvatarUrl
 import org.matrix.android.sdk.api.session.Session
+import org.matrix.android.sdk.api.session.room.Room
 import org.matrix.android.sdk.api.session.room.sender.SenderInfo
 import org.matrix.android.sdk.api.session.room.timeline.Timeline
 import org.matrix.android.sdk.api.session.room.timeline.TimelineEvent
 import org.matrix.android.sdk.api.session.room.timeline.TimelineSettings
+import org.matrix.android.sdk.api.util.toMatrixItem
 
 class ChatRoomState(
-    val roomId: String,
-    val client: Session,
-    val lifecycleOwner: LifecycleOwner
+    val room: Room,
+    val client: Session
 ) : Timeline.Listener {
     private var timeline: Timeline? by mutableStateOf(null)
     var timelineEvents: List<TimelineEvent> by mutableStateOf(emptyList())
@@ -29,10 +30,10 @@ class ChatRoomState(
 
 
     fun startSync() {
-        timeline = client.roomService().getRoom(roomId)?.timelineService()
-            ?.createTimeline(null, TimelineSettings(initialSize = 25)).also {
-                it?.addListener(this)
-                it?.start()
+        timeline = room.timelineService()
+            .createTimeline(null, TimelineSettings(initialSize = 25)).also {
+                it.addListener(this)
+                it.start()
             }
     }
 
@@ -41,13 +42,13 @@ class ChatRoomState(
             it.removeAllListeners()
             it.dispose()
         }
+        timeline = null
     }
 
     fun splitEvents(): List<Pair<SenderInfo, List<TimelineEvent>>> {
         val list = mutableListOf<Pair<SenderInfo, MutableList<TimelineEvent>>>()
 
         var lastUserId: SenderInfo? = null
-
         timelineEvents.forEach {
             if (lastUserId != null && it.senderInfo == lastUserId) {
                 list.last().second.add(it)
@@ -57,42 +58,32 @@ class ChatRoomState(
             lastUserId = it.senderInfo
         }
 
+
         return list.reversed()
     }
 
-    fun getName(consume: (String) -> Unit) {
-        client.roomService().getRoom(roomId)?.getRoomSummaryLive()?.observe(lifecycleOwner) { roomSummary ->
+    val name = room.roomSummary()?.displayName
+
+    val avatarUrl = getAvatarUrl(room.roomSummary()?.avatarUrl)
+
+    val lastEvent = room.roomSummary()?.latestPreviewableEvent
+
+    fun getName(lifecycleOwner: LifecycleOwner, consume: (String) -> Unit) {
+        room.getRoomSummaryLive().observe(lifecycleOwner) { roomSummary ->
             val summary = roomSummary.getOrNull() ?: return@observe
             consume(summary.displayName)
         }
     }
 
-    fun getRoomAvatar(consume: (String) -> Unit) {
-        client.roomService().getRoom(roomId)?.getRoomSummaryLive()?.observe(lifecycleOwner) { roomSummary ->
-            val summary = roomSummary.getOrNull() ?: return@observe
-            getAvatarUrl(summary.avatarUrl)?.let { consume(it) }
-        }
-    }
-
-    fun getLastMessage(consumer: (TimelineEvent) -> Unit) {
-        client.roomService().getRoom(roomId)?.getRoomSummaryLive()?.observe(lifecycleOwner) { maybe ->
-            val roomSummary = maybe.getOrNull() ?: return@observe
-            roomSummary.latestPreviewableEvent?.let {
-                latestEvent = it
-                consumer(it)
-            }
-        }
-    }
-
     fun sendTextMessage(message: String) {
         Log.d("Sending Message", message)
-        client.roomService().getRoom(roomId)
-            ?.sendService()
-            ?.sendTextMessage(message)
+        room.sendService()
+            .sendTextMessage(message)
     }
 
     fun getUserAvatar(id: String): String? {
-        return client.userService()
+        return client
+            .userService()
             .getUser(id)
             ?.avatarUrl?.let { getAvatarUrl(it) }
     }
