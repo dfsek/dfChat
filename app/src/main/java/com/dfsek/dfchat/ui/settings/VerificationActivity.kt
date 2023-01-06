@@ -5,9 +5,12 @@ import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.Button
+import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
 import com.dfsek.dfchat.SessionHolder
 import com.dfsek.dfchat.state.VerificationState
 import com.dfsek.dfchat.util.DynamicContent
@@ -21,14 +24,17 @@ class VerificationActivity : AppCompatActivity() {
         setContent {
             SessionHolder.currentSession?.let { session ->
                 val state = VerificationState(session)
-                DynamicContent(state.devices) {
-                    Column {
-                        Verification(state)
-                        it.forEach {
-                            Device(it)
+                Surface(modifier = Modifier.fillMaxSize()) {
+                    DynamicContent(state.devices) {
+                        Column {
+                            Verification(state)
+                            it.forEach {
+                                Device(it)
+                            }
                         }
                     }
                 }
+
             }
         }
     }

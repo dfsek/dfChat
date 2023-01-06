@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.Surface
 import androidx.compose.ui.Modifier
 import kotlin.reflect.KClass
 
@@ -19,7 +20,9 @@ class SettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            Settings()
+            Surface(modifier = Modifier.fillMaxSize()) {
+                Settings()
+            }
         }
     }
 

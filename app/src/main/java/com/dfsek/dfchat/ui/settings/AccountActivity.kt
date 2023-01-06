@@ -9,9 +9,11 @@ import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Button
+import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.runtime.*
@@ -63,12 +65,14 @@ class AccountActivity : AppCompatActivity() {
             }
         }
         setContent {
-            Column {
-                val client = SessionHolder.currentSession
-                if (client == null) {
-                    LoginForm()
-                } else {
-                    CurrentUser(client)
+            Surface(modifier = Modifier.fillMaxSize()) {
+                Column {
+                    val client = SessionHolder.currentSession
+                    if (client == null) {
+                        LoginForm()
+                    } else {
+                        CurrentUser(client)
+                    }
                 }
             }
         }
