@@ -1,13 +1,10 @@
 package com.dfsek.dfchat.state
 
-import android.util.Log
 import org.matrix.android.sdk.api.session.Session
-import org.matrix.android.sdk.api.session.crypto.crosssigning.DeviceTrustLevel
+import org.matrix.android.sdk.api.session.crypto.verification.VerificationService
 
 class VerificationState(val client: Session) {
-    suspend fun getDevices(consumer: (List<Pair<String, DeviceTrustLevel>>) -> Unit) {
-        Log.d("Fetching devices", "...")
+    val devices = client.cryptoService().getMyDevicesInfoLive()
 
-    }
-
+    fun registerListener(listener: VerificationService.Listener) = client.cryptoService().verificationService().addListener(listener)
 }

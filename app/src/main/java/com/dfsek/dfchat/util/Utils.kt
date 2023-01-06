@@ -13,6 +13,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.LiveData
 import com.dfsek.dfchat.SessionHolder
 import com.dfsek.dfchat.ui.settings.SettingsActivity
 import org.matrix.android.sdk.api.session.content.ContentUrlResolver
@@ -102,4 +104,12 @@ private fun formatMessage(timelineEvent: TimelineEvent): String {
     // You can use the toModel extension method to serialize the json map to one of the sdk defined content.
     val messageContent = timelineEvent.root.getClearContent().toModel<MessageContent>() ?: return ""
     return messageContent.body
+}
+
+@Composable
+fun <T> DynamicContent(data: LiveData<T>, consume: @Composable (T) -> Unit) {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var value: T? by remember { mutableStateOf(null) }
+    data.observe(lifecycleOwner) { value = it }
+    value?.let { consume(it) }
 }
