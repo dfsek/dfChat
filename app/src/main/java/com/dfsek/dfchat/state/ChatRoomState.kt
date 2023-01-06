@@ -27,7 +27,10 @@ class ChatRoomState(
 
     fun startSync() {
         timeline = client.roomService().getRoom(roomId)?.timelineService()
-            ?.createTimeline(null, TimelineSettings(initialSize = 25))
+            ?.createTimeline(null, TimelineSettings(initialSize = 25)).also {
+                it?.addListener(this)
+                it?.start()
+            }
     }
 
     fun stopSync() {
