@@ -13,10 +13,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.LiveData
 import com.dfsek.dfchat.SessionHolder
 import com.dfsek.dfchat.ui.settings.SettingsActivity
+import dev.jeziellago.compose.markdowntext.MarkdownText
 import org.matrix.android.sdk.api.session.content.ContentUrlResolver
 import org.matrix.android.sdk.api.session.events.model.EventType
 import org.matrix.android.sdk.api.session.events.model.toModel
@@ -95,11 +97,19 @@ fun getAvatarUrl(avatarUrl: String?, thumbnailX: Int = 32, thumbnailY: Int = thu
 
 internal const val SSO_REDIRECT_URL = "dfchat://login"
 
-fun TimelineEvent.getText() = when (root.getClearType()) {
+fun TimelineEvent.getRawText() = when (root.getClearType()) {
     EventType.MESSAGE -> formatMessage(this)
     EventType.ENCRYPTED -> "Encrypted message (haven't received keys!)"
 
     else -> "dfChat unimplemented event ${root.getClearType()}"
+}
+
+@Composable
+fun TimelineEvent.GetText(): Unit = when (root.getClearType()) {
+    EventType.MESSAGE -> MarkdownText(markdown = formatMessage(this))
+    EventType.ENCRYPTED -> Text("Encrypted message (haven't received keys!)", color = Color.Red)
+
+    else -> Text("dfChat unimplemented event ${root.getClearType()}", color = Color.Red)
 }
 
 private fun formatMessage(timelineEvent: TimelineEvent): String {

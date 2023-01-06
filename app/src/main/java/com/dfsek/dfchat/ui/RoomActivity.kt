@@ -31,9 +31,8 @@ import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
 import com.dfsek.dfchat.SessionHolder
 import com.dfsek.dfchat.state.ChatRoomState
+import com.dfsek.dfchat.util.GetText
 import com.dfsek.dfchat.util.SettingsDropdown
-import com.dfsek.dfchat.util.getText
-import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.launch
 import org.matrix.android.sdk.api.session.room.sender.SenderInfo
 import org.matrix.android.sdk.api.session.room.timeline.TimelineEvent
@@ -179,9 +178,7 @@ class RoomActivity : AppCompatActivity() {
             Column {
                 Text(senderInfo.disambiguatedDisplayName, fontSize = 14.sp, style = TextStyle(fontWeight = FontWeight.Bold))
                 timelineEvents.forEach { event ->
-                    val content by remember { mutableStateOf(event.getText()) }
-
-                    MarkdownText(markdown = content)
+                    event.GetText()
                 }
             }
         }
