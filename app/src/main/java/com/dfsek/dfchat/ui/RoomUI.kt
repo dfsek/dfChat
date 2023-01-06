@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
-import com.dfsek.dfchat.SettingsDropdown
+import com.dfsek.dfchat.util.SettingsDropdown
 import com.dfsek.dfchat.state.ChatRoomState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch

@@ -1,4 +1,4 @@
-package com.dfsek.dfchat
+package com.dfsek.dfchat.util
 
 import android.content.ActivityNotFoundException
 import android.content.Context
@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import com.dfsek.dfchat.SessionHolder
 import com.dfsek.dfchat.ui.settings.SettingsActivity
 import org.matrix.android.sdk.api.session.content.ContentUrlResolver
 

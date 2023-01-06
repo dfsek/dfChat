@@ -1,6 +1,6 @@
 package com.dfsek.dfchat.state
 
-import com.dfsek.dfchat.getAvatarUrl
+import com.dfsek.dfchat.util.getAvatarUrl
 import org.matrix.android.sdk.api.session.Session
 
 class UserState(val client: Session) {

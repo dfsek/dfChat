@@ -26,6 +26,9 @@ import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
 import com.dfsek.dfchat.*
 import com.dfsek.dfchat.state.UserState
+import com.dfsek.dfchat.util.SSO_REDIRECT_PATH
+import com.dfsek.dfchat.util.SSO_REDIRECT_URL
+import com.dfsek.dfchat.util.SSO_REDIRECT_URL_PARAM
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

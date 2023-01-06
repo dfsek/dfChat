@@ -15,6 +15,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import com.dfsek.dfchat.state.RoomsState
 import com.dfsek.dfchat.ui.RoomEntry
+import com.dfsek.dfchat.util.SettingsDropdown
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -3,7 +3,7 @@ package com.dfsek.dfchat.state
 import android.util.Log
 import androidx.compose.runtime.*
 import androidx.lifecycle.LifecycleOwner
-import com.dfsek.dfchat.getAvatarUrl
+import com.dfsek.dfchat.util.getAvatarUrl
 import org.matrix.android.sdk.api.session.Session
 import org.matrix.android.sdk.api.session.room.sender.SenderInfo
 import org.matrix.android.sdk.api.session.room.timeline.Timeline
