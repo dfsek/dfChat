@@ -9,7 +9,6 @@ import org.matrix.android.sdk.api.session.room.sender.SenderInfo
 import org.matrix.android.sdk.api.session.room.timeline.Timeline
 import org.matrix.android.sdk.api.session.room.timeline.TimelineEvent
 import org.matrix.android.sdk.api.session.room.timeline.TimelineSettings
-import org.matrix.android.sdk.api.util.toMatrixItem
 
 class ChatRoomState(
     val roomId: String,
@@ -55,15 +54,17 @@ class ChatRoomState(
         return list.reversed()
     }
 
-    suspend fun getName(consumer: suspend (String) -> Unit) {
-        consumer(roomId)
+    fun getName(consume: (String) -> Unit) {
+        client.roomService().getRoom(roomId)?.getRoomSummaryLive()?.observe(lifecycleOwner) { roomSummary ->
+            val summary = roomSummary.getOrNull() ?: return@observe
+            consume(summary.displayName)
+        }
     }
 
     fun getRoomAvatar(consume: (String) -> Unit) {
         client.roomService().getRoom(roomId)?.getRoomSummaryLive()?.observe(lifecycleOwner) { roomSummary ->
-            val roomSummaryAsMatrixItem =
-                roomSummary.map { it.toMatrixItem() }.getOrNull() ?: return@observe
-            getAvatarUrl(roomSummaryAsMatrixItem.avatarUrl)?.let { consume(it) }
+            val summary = roomSummary.getOrNull() ?: return@observe
+            getAvatarUrl(summary.avatarUrl)?.let { consume(it) }
         }
     }
 

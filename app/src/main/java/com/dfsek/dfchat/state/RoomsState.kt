@@ -11,9 +11,9 @@ import org.matrix.android.sdk.api.session.Session
 import org.matrix.android.sdk.api.session.room.RoomSummaryQueryParams
 
 class RoomsState(
-    val client: Session,
+    private val client: Session,
     scope: CoroutineScope,
-    val lifecycleOwner: LifecycleOwner
+    private val lifecycleOwner: LifecycleOwner
 ) {
     var rooms: List<ChatRoomState> by mutableStateOf(emptyList())
         private set

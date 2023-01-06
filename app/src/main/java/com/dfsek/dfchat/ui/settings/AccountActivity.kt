@@ -27,6 +27,7 @@ import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
 import com.dfsek.dfchat.*
 import com.dfsek.dfchat.state.UserState
+import com.dfsek.dfchat.ui.MainActivity
 import com.dfsek.dfchat.util.SSO_REDIRECT_PATH
 import com.dfsek.dfchat.util.SSO_REDIRECT_URL
 import com.dfsek.dfchat.util.SSO_REDIRECT_URL_PARAM
