@@ -15,7 +15,7 @@ TODO:
  - [ ] Highlight links
  - [ ] Message editing
  - [ ] Message redacting
- - [ ] Cross Signing
+ - [x] Cross Signing
  - [x] Encryption
  - [x] Open room
  - [ ] Display joined spaces

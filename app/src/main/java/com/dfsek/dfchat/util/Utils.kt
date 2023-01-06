@@ -40,7 +40,6 @@ fun openUrlInChromeCustomTab(
 }
 
 
-
 @Composable
 fun SettingsDropdown(applicationContext: Context, current: Context, refresh: () -> Unit = {}) {
     Box(
@@ -90,18 +89,20 @@ fun <E> List<E>.update(value: E, index: Int): List<E> {
 }
 
 fun getAvatarUrl(avatarUrl: String?, thumbnailX: Int = 32, thumbnailY: Int = thumbnailX): String? {
-    return SessionHolder.currentSession?.contentUrlResolver()?.resolveThumbnail(avatarUrl, thumbnailX, thumbnailY, ContentUrlResolver.ThumbnailMethod.SCALE)
+    return SessionHolder.currentSession?.contentUrlResolver()
+        ?.resolveThumbnail(avatarUrl, thumbnailX, thumbnailY, ContentUrlResolver.ThumbnailMethod.SCALE)
 }
 
 internal const val SSO_REDIRECT_URL = "dfchat://login"
 
-fun TimelineEvent.getText() =when (root.getClearType()) {
-        EventType.MESSAGE -> formatMessage(this)
-        else -> "Event of type ${root.getClearType()} not rendered yet"
-    }
+fun TimelineEvent.getText() = when (root.getClearType()) {
+    EventType.MESSAGE -> formatMessage(this)
+    EventType.ENCRYPTED -> "Encrypted message (haven't received keys!)"
+
+    else -> "dfChat unimplemented event ${root.getClearType()}"
+}
 
 private fun formatMessage(timelineEvent: TimelineEvent): String {
-    // You can use the toModel extension method to serialize the json map to one of the sdk defined content.
     val messageContent = timelineEvent.root.getClearContent().toModel<MessageContent>() ?: return ""
     return messageContent.body
 }

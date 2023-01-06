@@ -19,6 +19,9 @@ class ChatRoomState(
     var timelineEvents: List<TimelineEvent> by mutableStateOf(emptyList())
         private set
 
+    var latestEvent: TimelineEvent? = null
+        private set
+
 
     override fun onTimelineUpdated(snapshot: List<TimelineEvent>) {
         timelineEvents = snapshot.reversed()
@@ -75,6 +78,7 @@ class ChatRoomState(
         client.roomService().getRoom(roomId)?.getRoomSummaryLive()?.observe(lifecycleOwner) { maybe ->
             val roomSummary = maybe.getOrNull() ?: return@observe
             roomSummary.latestPreviewableEvent?.let {
+                latestEvent = it
                 consumer(it)
             }
         }
