@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Column
@@ -29,11 +30,12 @@ import com.dfsek.dfchat.state.UserState
 import com.dfsek.dfchat.util.SSO_REDIRECT_PATH
 import com.dfsek.dfchat.util.SSO_REDIRECT_URL
 import com.dfsek.dfchat.util.SSO_REDIRECT_URL_PARAM
+import com.dfsek.dfchat.util.openUrlInChromeCustomTab
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.matrix.android.sdk.api.auth.LoginType
 import org.matrix.android.sdk.api.auth.data.HomeServerConnectionConfig
+import org.matrix.android.sdk.api.auth.data.LoginFlowResult
 import org.matrix.android.sdk.api.session.Session
 
 
@@ -43,12 +45,13 @@ class AccountActivity : AppCompatActivity() {
         val token = intent.data?.getQueryParameter("loginToken")
 
         if (token != null) {
-            val homeserver = intent.data!!.getQueryParameter("homeserver").toString()
-            Log.d("SVR", homeserver)
-
             CoroutineScope(Dispatchers.Default).launch {
-                Log.i("Accounts", "Signing in to matrix account")
                 try {
+                    Log.i("Session", "Signing in to matrix account")
+                    SessionHolder.currentSession = DfChat.getMatrix(this@AccountActivity)
+                        .authenticationService()
+                        .getLoginWizard()
+                        .loginWithToken(token)
 
                     runOnUiThread {
                         startActivity(Intent(applicationContext, MainActivity::class.java))
@@ -63,7 +66,7 @@ class AccountActivity : AppCompatActivity() {
             Column {
                 val client = SessionHolder.currentSession
                 if (client == null) {
-                    HomeserverUrl()
+                    LoginForm()
                 } else {
                     CurrentUser(client)
                 }
@@ -75,8 +78,6 @@ class AccountActivity : AppCompatActivity() {
     fun CurrentUser(matrixClient: Session) {
         Column {
             val userState = remember { UserState(matrixClient) }
-
-
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(userState.getAvatar())
@@ -87,7 +88,6 @@ class AccountActivity : AppCompatActivity() {
                 contentDescription = null,
                 modifier = Modifier.size(64.dp).clip(CircleShape)
             )
-
 
             Text(userState.getUsername())
 
@@ -102,12 +102,12 @@ class AccountActivity : AppCompatActivity() {
 
     @Composable
     @Preview
-    fun HomeserverUrl() {
+    fun LoginForm() {
 
         Column {
             val homeserverUrl = remember { mutableStateOf("") }
             var error by remember { mutableStateOf("") }
-            val res = remember { mutableStateOf(emptySet<LoginType>()) }
+            var loginTypes by remember { mutableStateOf<LoginFlowResult?>(null) }
             TextField(
                 value = homeserverUrl.value,
                 onValueChange = {
@@ -128,22 +128,17 @@ class AccountActivity : AppCompatActivity() {
                     }
 
                     lifecycleScope.launch {
-                        DfChat.getMatrix(this@AccountActivity).authenticationService()
+                        loginTypes = DfChat.getMatrix(this@AccountActivity).authenticationService()
                             .getLoginFlow(connectionConfig)
-                            .supportedLoginTypes
-                            .forEach {
-                                Log.d("Login Type", it)
-                            }
                     }
                 }
             ) {
                 Text("Scan")
             }
             Text(text = error)
-            /*
-            if (res.value.any {
-                    it is LoginType.Password
-                }) {
+            if (loginTypes?.supportedLoginTypes?.any {
+                    it == "m.login.password"
+                } == true) {
                 Button(
                     onClick = {
                         Toast.makeText(this@AccountActivity, "Not implemented", Toast.LENGTH_SHORT).show()
@@ -152,27 +147,19 @@ class AccountActivity : AppCompatActivity() {
                     Text("Sign in with Username")
                 }
             }
-            val sso = res.value.stream().filter {
-                it is LoginType.Unknown && it.raw["type"]?.jsonPrimitive?.content == "m.login.sso"
-            }.map { it as LoginType.Unknown }.toList()
-            sso.forEach { ssoProvider ->
-                Log.d("AccountActivity", ssoProvider.raw.toString())
-                ssoProvider.raw["identity_providers"]?.jsonArray?.forEach {
-                    val providerName = it.jsonObject.get("name")?.jsonPrimitive!!.content
-                    val providerId = it.jsonObject.get("id")?.jsonPrimitive!!.content
-                    Button(
-                        onClick = {
-                            val url = createUrl(homeserverUrl.value, providerId)
-                            Log.d("AccountActivity", url)
-                            openUrlInChromeCustomTab(this@AccountActivity, null, url)
+            loginTypes?.ssoIdentityProviders?.forEach {
+                DfChat.getMatrix(this@AccountActivity).authenticationService().getSsoUrl(SSO_REDIRECT_URL, null, it.id)
+                    ?.let {  url ->
+                        Button(
+                            onClick = {
+                                Log.d("Homeserver Discovery", url)
+                                openUrlInChromeCustomTab(this@AccountActivity, null, url)
+                            }
+                        ) {
+                            Text("Sign in with ${it.name}")
                         }
-                    ) {
-                        Text("Sign in with $providerName")
                     }
-                }
             }
-
-             */
         }
     }
 
