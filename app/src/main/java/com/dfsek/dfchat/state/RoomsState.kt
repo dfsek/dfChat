@@ -1,5 +1,6 @@
 package com.dfsek.dfchat.state
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -16,16 +17,20 @@ class RoomsState(
     scope: CoroutineScope,
     private val lifecycleOwner: LifecycleOwner
 ) {
-    var rooms: List<ChatRoomState> by mutableStateOf(emptyList())
-        private set
+    val rooms = mutableStateMapOf<String, ChatRoomState>()
 
     init {
-        scope.launch {
-            client.roomService().getRoomSummariesLive(RoomSummaryQueryParams.Builder().build()).observe(lifecycleOwner) {
-                rooms = it.map { getRoom(it.roomId) }
+        client.roomService().getRoomSummariesLive(RoomSummaryQueryParams.Builder().build()).observe(lifecycleOwner) {
+            it.forEach {
+                scope.launch {
+                    rooms[it.roomId] = getRoom(it.roomId)
+                }
             }
         }
     }
 
-    fun getRoom(id: String): ChatRoomState = ChatRoomState(id, client, lifecycleOwner)
+    fun getRooms() = rooms.values.sortedBy { it.latestEvent?.root?.originServerTs }.reversed()
+    fun getRoom(id: String): ChatRoomState = rooms.computeIfAbsent(id) {
+        ChatRoomState(it, client, lifecycleOwner)
+    }
 }

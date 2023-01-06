@@ -15,11 +15,11 @@ class ChatRoomState(
     val client: Session,
     val lifecycleOwner: LifecycleOwner
 ) : Timeline.Listener {
-    private var timeline: Timeline? = null
+    private var timeline: Timeline? by mutableStateOf(null)
     var timelineEvents: List<TimelineEvent> by mutableStateOf(emptyList())
         private set
 
-    var latestEvent: TimelineEvent? = null
+    var latestEvent: TimelineEvent? by mutableStateOf(null)
         private set
 
 

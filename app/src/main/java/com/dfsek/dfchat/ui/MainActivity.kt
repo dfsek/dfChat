@@ -59,7 +59,7 @@ class MainActivity : AppCompatActivity() {
             val lifecycleOwner = LocalLifecycleOwner.current
             val roomsState = remember { RoomsState(it, scope, lifecycleOwner) }
             LazyColumn {
-                items(roomsState.rooms.sortedBy { it.latestEvent?.root?.ageLocalTs }) {
+                items(roomsState.getRooms()) {
                     RoomEntry(roomsState, it, activity)
                 }
             }
