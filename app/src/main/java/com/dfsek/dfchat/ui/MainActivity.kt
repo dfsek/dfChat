@@ -34,6 +34,7 @@ import com.dfsek.dfchat.util.getRawText
 import kotlinx.coroutines.launch
 import org.matrix.android.sdk.api.session.getRoom
 import org.matrix.android.sdk.api.session.room.RoomSummaryQueryParams
+import org.matrix.android.sdk.api.session.room.model.RoomSummary
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,25 +57,17 @@ class MainActivity : AppCompatActivity() {
     @Composable
     fun RoomList(activity: Activity) {
         SessionHolder.currentSession?.let { session ->
-            val scope = rememberCoroutineScope()
             val lifecycleOwner = LocalLifecycleOwner.current
-            val rooms: MutableMap<String, ChatRoomState> = remember { mutableStateMapOf() }
+            var rooms: List<RoomSummary> by remember { mutableStateOf(emptyList()) }
             LaunchedEffect(session) {
                 session.roomService().getRoomSummariesLive(RoomSummaryQueryParams.Builder().build())
                     .observe(lifecycleOwner) {
-                        it.forEach {
-                            scope.launch {
-                                session.getRoom(it.roomId)?.let { it1 ->
-                                    rooms[it.roomId] = ChatRoomState(it1, session)
-                                }
-                            }
-                        }
-
+                        rooms = it
                     }
             }
             LazyColumn {
-                items(rooms.values.sortedBy { it.latestEvent?.root?.originServerTs }.reversed()) {
-                    Log.d("ROOM", it.room.roomId)
+                items(rooms.sortedBy { it.latestPreviewableEvent?.root?.originServerTs }.reversed()) {
+                    Log.d("ROOM", it.roomId)
                     RoomEntry(it, activity)
                 }
             }
@@ -82,17 +75,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     @Composable
-    fun RoomEntry(room: ChatRoomState, activity: Activity) {
+    fun RoomEntry(room: RoomSummary, activity: Activity) {
         Row(modifier = Modifier.clickable {
             activity.startActivity(Intent(activity, RoomActivity::class.java).apply {
-                putExtra("room", room.room.roomId)
+                putExtra("room", room.roomId)
             })
         }) {
             val avatarUrl = room.avatarUrl
             val name = room.name
-            val lastContent = room.lastEvent
+            val lastContent = room.latestPreviewableEvent
 
-            avatarUrl?.let {
+            avatarUrl.let {
                 Log.d("Channel Image", "Drawing image...")
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
