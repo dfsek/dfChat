@@ -16,6 +16,10 @@ import androidx.compose.ui.Alignment
 import com.dfsek.dfchat.SessionHolder
 import com.dfsek.dfchat.ui.settings.SettingsActivity
 import org.matrix.android.sdk.api.session.content.ContentUrlResolver
+import org.matrix.android.sdk.api.session.events.model.EventType
+import org.matrix.android.sdk.api.session.events.model.toModel
+import org.matrix.android.sdk.api.session.room.model.message.MessageContent
+import org.matrix.android.sdk.api.session.room.timeline.TimelineEvent
 
 fun openUrlInChromeCustomTab(
     context: Context,
@@ -87,6 +91,15 @@ fun getAvatarUrl(avatarUrl: String?, thumbnailX: Int = 32, thumbnailY: Int = thu
     return SessionHolder.currentSession?.contentUrlResolver()?.resolveThumbnail(avatarUrl, thumbnailX, thumbnailY, ContentUrlResolver.ThumbnailMethod.SCALE)
 }
 
-internal const val SSO_REDIRECT_PATH = "/_matrix/client/r0/login/sso/redirect"
-internal const val SSO_REDIRECT_URL_PARAM = "redirectUrl"
 internal const val SSO_REDIRECT_URL = "dfchat://login"
+
+fun TimelineEvent.getText() =when (root.getClearType()) {
+        EventType.MESSAGE -> formatMessage(this)
+        else -> "Event of type ${root.getClearType()} not rendered yet"
+    }
+
+private fun formatMessage(timelineEvent: TimelineEvent): String {
+    // You can use the toModel extension method to serialize the json map to one of the sdk defined content.
+    val messageContent = timelineEvent.root.getClearContent().toModel<MessageContent>() ?: return ""
+    return messageContent.body
+}

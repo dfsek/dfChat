@@ -21,7 +21,7 @@ class ChatRoomState(
 
 
     override fun onTimelineUpdated(snapshot: List<TimelineEvent>) {
-        timelineEvents = snapshot
+        timelineEvents = snapshot.reversed()
     }
 
 

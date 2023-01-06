@@ -30,6 +30,7 @@ import coil.request.ImageRequest
 import com.dfsek.dfchat.SessionHolder
 import com.dfsek.dfchat.state.ChatRoomState
 import com.dfsek.dfchat.util.SettingsDropdown
+import com.dfsek.dfchat.util.getText
 import kotlinx.coroutines.launch
 import org.matrix.android.sdk.api.session.room.timeline.TimelineEvent
 
@@ -175,7 +176,7 @@ class RoomActivity : AppCompatActivity() {
             Column {
                 Text(userId, fontSize = 14.sp)
                 timelineEvents.forEach { event ->
-                    val content by remember { mutableStateOf(event.root.toContentStringWithIndent()) }
+                    val content by remember { mutableStateOf(event.getText()) }
 
                     Text(content)
                 }

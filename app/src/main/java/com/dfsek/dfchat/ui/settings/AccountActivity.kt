@@ -25,12 +25,11 @@ import androidx.lifecycle.lifecycleScope
 import coil.compose.AsyncImage
 import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
-import com.dfsek.dfchat.*
+import com.dfsek.dfchat.DfChat
+import com.dfsek.dfchat.SessionHolder
 import com.dfsek.dfchat.state.UserState
 import com.dfsek.dfchat.ui.MainActivity
-import com.dfsek.dfchat.util.SSO_REDIRECT_PATH
 import com.dfsek.dfchat.util.SSO_REDIRECT_URL
-import com.dfsek.dfchat.util.SSO_REDIRECT_URL_PARAM
 import com.dfsek.dfchat.util.openUrlInChromeCustomTab
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -162,15 +161,6 @@ class AccountActivity : AppCompatActivity() {
                     }
             }
         }
-    }
-
-    private fun createUrl(base: String, provider: String): String {
-        val trimmed = if (base.endsWith("/")) {
-            base.substringBeforeLast("/")
-        } else base
-
-
-        return "$trimmed$SSO_REDIRECT_PATH/$provider?$SSO_REDIRECT_URL_PARAM=${Uri.encode("$SSO_REDIRECT_URL?homeserver=$base")}"
     }
 
     companion object {
