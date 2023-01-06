@@ -31,6 +31,7 @@ import com.dfsek.dfchat.SessionHolder
 import com.dfsek.dfchat.state.ChatRoomState
 import com.dfsek.dfchat.util.SettingsDropdown
 import com.dfsek.dfchat.util.getText
+import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.launch
 import org.matrix.android.sdk.api.session.room.sender.SenderInfo
 import org.matrix.android.sdk.api.session.room.timeline.TimelineEvent
@@ -178,7 +179,7 @@ class RoomActivity : AppCompatActivity() {
                 timelineEvents.forEach { event ->
                     val content by remember { mutableStateOf(event.getText()) }
 
-                    Text(content)
+                    MarkdownText(markdown = content)
                 }
             }
         }

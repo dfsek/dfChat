@@ -60,6 +60,8 @@ dependencies {
 
     implementation("org.matrix.android:matrix-android-sdk2:1.5.11")
 
+    implementation("com.github.jeziellago:compose-markdown:0.3.1")
+
     implementation("io.ktor:ktor-client-android:2.2.1")
     implementation("androidx.browser:browser:1.4.0")
     implementation("io.arrow-kt:arrow-core:1.1.3")
