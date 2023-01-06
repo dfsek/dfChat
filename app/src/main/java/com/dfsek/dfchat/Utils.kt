@@ -13,24 +13,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import arrow.core.flatMap
 import com.dfsek.dfchat.ui.settings.SettingsActivity
-import io.ktor.http.*
-import kotlinx.coroutines.CoroutineScope
-import net.folivo.trixnity.client.MatrixClient
-import net.folivo.trixnity.client.MatrixClientConfiguration
-import net.folivo.trixnity.client.key.DeviceTrustLevel
-import net.folivo.trixnity.client.loginWith
-import net.folivo.trixnity.client.media.MediaStore
-import net.folivo.trixnity.client.store.Room
-import net.folivo.trixnity.clientserverapi.model.authentication.IdentifierType
-import net.folivo.trixnity.clientserverapi.model.authentication.LoginType
-import net.folivo.trixnity.core.model.events.EventContent
-import net.folivo.trixnity.core.model.events.m.room.EncryptedEventContent
-import net.folivo.trixnity.core.model.events.m.room.MemberEventContent
-import net.folivo.trixnity.core.model.events.m.room.Membership
-import net.folivo.trixnity.core.model.events.m.room.RoomMessageEventContent
-import org.koin.core.module.Module
+import org.matrix.android.sdk.api.session.content.ContentUrlResolver
 
 fun openUrlInChromeCustomTab(
     context: Context,
@@ -48,68 +32,6 @@ fun openUrlInChromeCustomTab(
     }
 }
 
-suspend fun MatrixClient.Companion.login(
-    baseUrl: Url,
-    identifier: IdentifierType? = null,
-    token: String,
-    deviceId: String? = null,
-    initialDeviceDisplayName: String? = null,
-    repositoriesModule: Module,
-    mediaStore: MediaStore,
-    scope: CoroutineScope,
-    configuration: MatrixClientConfiguration.() -> Unit = {}
-): Result<MatrixClient> =
-    MatrixClient.Companion.loginWith(
-        baseUrl = baseUrl,
-        repositoriesModule = repositoriesModule,
-        mediaStore = mediaStore,
-        scope = scope,
-        getLoginInfo = { api ->
-            api.authentication.login(
-                identifier = identifier,
-                token = token,
-                type = LoginType.Token,
-                deviceId = deviceId,
-                initialDeviceDisplayName = initialDeviceDisplayName
-            ).flatMap { login ->
-                api.users.getProfile(login.userId).map { profile ->
-                    MatrixClient.LoginInfo(
-                        userId = login.userId,
-                        accessToken = login.accessToken,
-                        deviceId = login.deviceId,
-                        displayName = profile.displayName,
-                        avatarUrl = profile.avatarUrl
-                    )
-                }
-            }
-        },
-        configuration = configuration
-    )
-
-fun parseEvent(content: EventContent): String {
-    return when (content) {
-        is MemberEventContent -> content.displayName + " " + when (content.membership) {
-            Membership.LEAVE -> "left."
-            Membership.BAN -> "was banned."
-            Membership.INVITE -> "was invited."
-            Membership.JOIN -> "joined."
-            Membership.KNOCK -> "knocked."
-        }
-
-        is RoomMessageEventContent -> content.body
-        is EncryptedEventContent -> "Encrypted message"
-        else -> content.toString()
-    }
-}
-
-fun Room.getHumanName(): String =
-    if (name?.explicitName != null) {
-        name!!.explicitName as String
-    } else if (name?.heroes?.isNotEmpty() == true) {
-        name!!.heroes[0].full
-    } else {
-        name.toString()
-    }
 
 
 @Composable
@@ -160,12 +82,8 @@ fun <E> List<E>.update(value: E, index: Int): List<E> {
     return mapIndexed { i, e -> if (i == index) value else e }
 }
 
-fun DeviceTrustLevel.userString(): String = when(this) {
-    is DeviceTrustLevel.Verified -> "Verified"
-    is DeviceTrustLevel.Blocked -> "Blocked"
-    is DeviceTrustLevel.NotVerified -> "Unverified"
-    is DeviceTrustLevel.NotCrossSigned -> "Not Cross-Signed"
-    is DeviceTrustLevel.Invalid -> "Invalid: " + this.reason
+fun getAvatarUrl(avatarUrl: String?, thumbnailX: Int = 32, thumbnailY: Int = thumbnailX): String? {
+    return SessionHolder.currentSession?.contentUrlResolver()?.resolveThumbnail(avatarUrl, thumbnailX, thumbnailY, ContentUrlResolver.ThumbnailMethod.SCALE)
 }
 
 internal const val SSO_REDIRECT_PATH = "/_matrix/client/r0/login/sso/redirect"

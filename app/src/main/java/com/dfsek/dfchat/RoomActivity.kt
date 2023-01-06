@@ -3,15 +3,11 @@ package com.dfsek.dfchat
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import com.dfsek.dfchat.state.ChatRoomState
-import com.dfsek.dfchat.state.LoginState
 import com.dfsek.dfchat.ui.RoomUI
-import net.folivo.trixnity.core.model.RoomId
 
 class RoomActivity : AppCompatActivity() {
     private lateinit var chatRoomState: ChatRoomState
@@ -19,12 +15,14 @@ class RoomActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
+            val lifecycleOwner = LocalLifecycleOwner.current
             intent.getStringExtra("room")?.let { roomId ->
-                LoginState.matrixClient?.let {
+                SessionHolder.currentSession?.let {
                     val state = remember {
                         ChatRoomState(
-                            roomId = RoomId(roomId),
-                            client = it
+                            roomId = roomId,
+                            client = it,
+                            lifecycleOwner
                         ).also {
                             it.startSync()
                             chatRoomState = it
@@ -37,9 +35,6 @@ class RoomActivity : AppCompatActivity() {
                         applicationContext = applicationContext,
                         activity = this
                     )
-                    LaunchedEffect(roomId) {
-                        state.fetchMessages()
-                    }
                 }
             }
         }
@@ -47,7 +42,7 @@ class RoomActivity : AppCompatActivity() {
 
     override fun finish() {
         super.finish()
-        if(this::chatRoomState.isInitialized) {
+        if (this::chatRoomState.isInitialized) {
             chatRoomState.stopSync()
         }
     }

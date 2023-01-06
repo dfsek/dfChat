@@ -26,12 +26,10 @@ import coil.compose.AsyncImage
 import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
 import com.dfsek.dfchat.SettingsDropdown
-import com.dfsek.dfchat.parseEvent
 import com.dfsek.dfchat.state.ChatRoomState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import net.folivo.trixnity.client.store.TimelineEvent
-import net.folivo.trixnity.core.model.UserId
+import org.matrix.android.sdk.api.session.room.timeline.TimelineEvent
 
 @Composable
 fun RoomUI(
@@ -81,7 +79,7 @@ fun UserInput(
                 input = it
             })
             Button(onClick = {
-                if(input.trim().isNotEmpty()) {
+                if (input.trim().isNotEmpty()) {
                     onMessageSent(input)
                     input = ""
                 }
@@ -93,15 +91,16 @@ fun UserInput(
 }
 
 @Composable
-fun RoomTopBar(name: String, modifier: Modifier, applicationContext: Context, activity: Activity, state: ChatRoomState, scope: CoroutineScope) {
+fun RoomTopBar(
+    name: String,
+    modifier: Modifier,
+    applicationContext: Context,
+    activity: Activity,
+    state: ChatRoomState,
+    scope: CoroutineScope
+) {
     Row(modifier = modifier.background(Color.White).fillMaxWidth()) {
-        SettingsDropdown(applicationContext, activity, refresh = {
-            scope.launch {
-                Log.d("Fetching", "more messages")
-                state.clear()
-                state.fetchMessages()
-            }
-        })
+        SettingsDropdown(applicationContext, activity)
         Text(name, fontSize = 24.sp)
     }
 }
@@ -121,7 +120,7 @@ fun RoomMessages(
             reverseLayout = true
         ) {
             items(state.splitEvents()) {
-                MessageBlock(state, userId = it.first, timelineEvents = it.second)
+                MessageBlock(state, userId = it.first.disambiguatedDisplayName, timelineEvents = it.second)
             }
         }
     }
@@ -131,47 +130,28 @@ fun RoomMessages(
 fun MessageBlock(
     state: ChatRoomState,
     modifier: Modifier = Modifier,
-    userId: UserId,
+    userId: String,
     timelineEvents: List<TimelineEvent>
 ) {
     Row(modifier = modifier) {
-        var bytes by remember { mutableStateOf<ByteArray?>(null) }
-        bytes?.let {
-            Log.d("Channel Image", "Drawing image...")
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(it)
-                    .crossfade(true)
-                    .decoderFactory(BitmapFactoryDecoder.Factory())
-                    .build(),
-                contentScale = ContentScale.Fit,
-                contentDescription = null,
-                modifier = Modifier.size(48.dp).clip(CircleShape)
-            )
-        } ?: Box(
-            modifier = Modifier.size(48.dp).clip(CircleShape).background(Color.Cyan)
+
+        Log.d("Channel Image", "Drawing image...")
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(state.getUserAvatar(userId))
+                .crossfade(true)
+                .decoderFactory(BitmapFactoryDecoder.Factory())
+                .build(),
+            contentScale = ContentScale.Fit,
+            contentDescription = null,
+            modifier = Modifier.size(48.dp).clip(CircleShape)
         )
-        LaunchedEffect(userId) {
-            state.getAvatar(userId) {
-                bytes = it
-            }
-        }
+
 
         Column {
-            Text(userId.full, fontSize = 14.sp)
+            Text(userId, fontSize = 14.sp)
             timelineEvents.forEach { event ->
-                var content by remember { mutableStateOf(parseEvent(event.event.content)) }
-
-                LaunchedEffect(event) {
-                    event.content
-                        ?.onSuccess {
-                            Log.d("Decrypted event", it.toString())
-                            content = parseEvent(it)
-                        }?.onFailure {
-                            Log.e("Decrypted event", "Failure")
-                            it.printStackTrace()
-                        }
-                }
+                val content by remember { mutableStateOf(event.root.toContentStringWithIndent()) }
 
                 Text(content)
             }

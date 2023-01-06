@@ -42,11 +42,6 @@ android {
     }
 }
 
-val trixnityVersion = "3.1.0"
-
-fun trixnity(module: String, version: String = trixnityVersion) = "net.folivo:trixnity-$module:$version"
-
-
 dependencies {
     implementation("androidx.core:core-ktx:1.9.0")
     implementation("androidx.appcompat:appcompat:1.5.1")
@@ -63,8 +58,7 @@ dependencies {
     implementation("androidx.room:room-ktx:$room_version")
 
 
-    implementation(trixnity("client"))
-    implementation(trixnity("client-repository-realm"))
+    implementation("org.matrix.android:matrix-android-sdk2:1.5.11")
 
     implementation("io.ktor:ktor-client-android:2.2.1")
     implementation("androidx.browser:browser:1.4.0")
@@ -90,6 +84,6 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.4")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.0")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 }

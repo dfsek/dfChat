@@ -5,11 +5,8 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -19,32 +16,22 @@ import androidx.compose.material.TextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
 import coil.compose.AsyncImage
 import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
 import com.dfsek.dfchat.*
-import com.dfsek.dfchat.state.LoginState
 import com.dfsek.dfchat.state.UserState
-import io.ktor.http.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
-import net.folivo.trixnity.client.MatrixClient
-import net.folivo.trixnity.client.verification
-import net.folivo.trixnity.client.verification.*
-import net.folivo.trixnity.clientserverapi.client.MatrixClientServerApiClientImpl
-import net.folivo.trixnity.clientserverapi.model.authentication.LoginType
-import net.folivo.trixnity.core.model.events.m.key.verification.VerificationMethod
-import kotlin.streams.toList
+import org.matrix.android.sdk.api.auth.LoginType
+import org.matrix.android.sdk.api.auth.data.HomeServerConnectionConfig
+import org.matrix.android.sdk.api.session.Session
 
 
 class AccountActivity : AppCompatActivity() {
@@ -59,7 +46,6 @@ class AccountActivity : AppCompatActivity() {
             CoroutineScope(Dispatchers.Default).launch {
                 Log.i("Accounts", "Signing in to matrix account")
                 try {
-                    LoginState.logInToken(Url(homeserver), token)
 
                     runOnUiThread {
                         startActivity(Intent(applicationContext, MainActivity::class.java))
@@ -72,7 +58,7 @@ class AccountActivity : AppCompatActivity() {
         }
         setContent {
             Column {
-                val client = LoginState.matrixClient
+                val client = SessionHolder.currentSession
                 if (client == null) {
                     HomeserverUrl()
                 } else {
@@ -83,32 +69,22 @@ class AccountActivity : AppCompatActivity() {
     }
 
     @Composable
-    fun CurrentUser(matrixClient: MatrixClient) {
+    fun CurrentUser(matrixClient: Session) {
         Column {
             val userState = remember { UserState(matrixClient) }
-            var avatar: ByteArray? by remember { mutableStateOf(null) }
 
-            LaunchedEffect(matrixClient) {
-                userState.getAvatar {
-                    avatar = it
-                }
-            }
 
-            avatar?.let {
-                Log.d("Channel Image", "Drawing image...")
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(it)
-                        .crossfade(true)
-                        .decoderFactory(BitmapFactoryDecoder.Factory())
-                        .build(),
-                    contentScale = ContentScale.Fit,
-                    contentDescription = null,
-                    modifier = Modifier.size(64.dp).clip(CircleShape)
-                )
-            } ?: Box(
-                modifier = Modifier.size(64.dp).clip(CircleShape).background(Color.Cyan)
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(userState.getAvatar())
+                    .crossfade(true)
+                    .decoderFactory(BitmapFactoryDecoder.Factory())
+                    .build(),
+                contentScale = ContentScale.Fit,
+                contentDescription = null,
+                modifier = Modifier.size(64.dp).clip(CircleShape)
             )
+
 
             Text(userState.getUsername())
 
@@ -127,7 +103,7 @@ class AccountActivity : AppCompatActivity() {
 
         Column {
             val homeserverUrl = remember { mutableStateOf("") }
-            val error = remember { mutableStateOf("") }
+            var error by remember { mutableStateOf("") }
             val res = remember { mutableStateOf(emptySet<LoginType>()) }
             TextField(
                 value = homeserverUrl.value,
@@ -137,26 +113,31 @@ class AccountActivity : AppCompatActivity() {
             )
             Button(
                 onClick = {
-                    val matrixRestClient = MatrixClientServerApiClientImpl(
-                        baseUrl = Url(homeserverUrl.value),
-                    )
-                    val coroutineScope = CoroutineScope(Dispatchers.Default)
+                    val connectionConfig = try {
+                        HomeServerConnectionConfig
+                            .Builder()
+                            .withHomeServerUri(Uri.parse(homeserverUrl.value))
+                            .build()
+                    } catch (e: Exception) {
+                        error = "Invalid homeserver: ${e.message}"
+                        e.printStackTrace()
+                        return@Button
+                    }
 
-                    coroutineScope.launch {
-                        matrixRestClient.authentication.getLoginTypes()
-                            .onFailure {
-                                it.printStackTrace()
-                                error.value = it.message.toString()
-                            }
-                            .onSuccess {
-                                res.value = it
+                    lifecycleScope.launch {
+                        DfChat.getMatrix(this@AccountActivity).authenticationService()
+                            .getLoginFlow(connectionConfig)
+                            .supportedLoginTypes
+                            .forEach {
+                                Log.d("Login Type", it)
                             }
                     }
                 }
             ) {
                 Text("Scan")
             }
-            Text(text = error.value)
+            Text(text = error)
+            /*
             if (res.value.any {
                     it is LoginType.Password
                 }) {
@@ -187,6 +168,8 @@ class AccountActivity : AppCompatActivity() {
                     }
                 }
             }
+
+             */
         }
     }
 

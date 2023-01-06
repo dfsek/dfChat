@@ -1,42 +1,30 @@
 package com.dfsek.dfchat.state
 
-import android.util.Log
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import net.folivo.trixnity.client.MatrixClient
-import net.folivo.trixnity.client.room
-import net.folivo.trixnity.client.store.Room
-import net.folivo.trixnity.client.store.TimelineEvent
-import net.folivo.trixnity.core.model.RoomId
+import org.matrix.android.sdk.api.session.Session
+import org.matrix.android.sdk.api.session.room.RoomSummaryQueryParams
 
 class RoomsState(
-    val client: MatrixClient,
-    scope: CoroutineScope
+    val client: Session,
+    scope: CoroutineScope,
+    val lifecycleOwner: LifecycleOwner
 ) {
-    val rooms: MutableMap<RoomId, Pair<TimelineEvent?, Room>> = mutableStateMapOf()
+    var rooms: List<ChatRoomState> by mutableStateOf(emptyList())
+        private set
 
     init {
         scope.launch {
-            client.room.getAll()
-                .collectLatest {
-                    it.values.forEach {
-                        val room = it.first()
-                        Log.d("Fetched room", room.toString())
-                        scope.launch {
-                            room?.lastRelevantEventId?.let { it1 ->
-                                client.room.getTimelineEvent(it1, room.roomId)
-                                    .collectLatest {
-                                        rooms[room.roomId] = (Pair(it, room))
-                                    }
-                            }
-                        }
-                    }
-                }
+            client.roomService().getRoomSummariesLive(RoomSummaryQueryParams.Builder().build()).observe(lifecycleOwner) {
+                rooms = it.map { getRoom(it.roomId) }
+            }
         }
     }
 
-    fun getRoom(id: RoomId): ChatRoomState = ChatRoomState(id, client)
+    fun getRoom(id: String): ChatRoomState = ChatRoomState(id, client, lifecycleOwner)
 }

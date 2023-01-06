@@ -1,193 +1,89 @@
 package com.dfsek.dfchat.state
 
 import android.util.Log
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateMapOf
-import com.dfsek.dfchat.getHumanName
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
-import net.folivo.trixnity.client.MatrixClient
-import net.folivo.trixnity.client.getEventId
-import net.folivo.trixnity.client.key
-import net.folivo.trixnity.client.room
-import net.folivo.trixnity.client.room.message.text
-import net.folivo.trixnity.client.store.TimelineEvent
-import net.folivo.trixnity.core.model.EventId
-import net.folivo.trixnity.core.model.RoomId
-import net.folivo.trixnity.core.model.UserId
-import net.folivo.trixnity.core.model.events.Event
-import net.folivo.trixnity.core.model.events.RedactedMessageEventContent
-import net.folivo.trixnity.core.model.events.m.room.RedactionEventContent
-import okhttp3.internal.toImmutableList
+import androidx.compose.runtime.*
+import androidx.lifecycle.LifecycleOwner
+import com.dfsek.dfchat.getAvatarUrl
+import org.matrix.android.sdk.api.session.Session
+import org.matrix.android.sdk.api.session.room.sender.SenderInfo
+import org.matrix.android.sdk.api.session.room.timeline.Timeline
+import org.matrix.android.sdk.api.session.room.timeline.TimelineEvent
+import org.matrix.android.sdk.api.session.room.timeline.TimelineSettings
+import org.matrix.android.sdk.api.util.toMatrixItem
 
 class ChatRoomState(
-    val roomId: RoomId,
-    val client: MatrixClient,
-) {
-    private val mappedEvents: MutableMap<EventId, TimelineEvent> = mutableStateMapOf()
-    private var newestEvent: EventId? = null
-    private val listener: suspend (Event<*>) -> Unit = {
-        if(it is Event.RoomEvent<*> && it.roomId == roomId) {
-            val content = it.content
-            if(content is RedactionEventContent) {
-                client.room.getTimelineEvent(content.redacts, roomId)
-                    .collectLatest {
-                        if (it != null) {
-                            Log.d("Redacting event:", it.toString())
-                            mappedEvents[it.eventId] = it
-                            rescanEvents()
-                        }
-                    }
-            }
-            CoroutineScope(Dispatchers.Default).launch {
-                client.room.getTimelineEvent(it.id, roomId)
-                    .collectLatest {
-                        if (it != null) {
-                            Log.d("Received new event", it.toString())
-                            mappedEvents[it.eventId] = it
-                            rescanEvents()
-                        }
-                    }
-            }
-        }
+    val roomId: String,
+    val client: Session,
+    val lifecycleOwner: LifecycleOwner
+) : Timeline.Listener {
+    private var timeline: Timeline? = null
+    var timelineEvents: List<TimelineEvent> by mutableStateOf(emptyList())
+        private set
+
+
+    override fun onTimelineUpdated(snapshot: List<TimelineEvent>) {
+        timelineEvents = snapshot
     }
 
-    private fun rescanEvents() {
-        mappedEvents.values.stream().reduce { e, e2 ->
-             if(e.event.originTimestamp > e2.event.originTimestamp) e else e2
-        }.ifPresent {
-            newestEvent = it.eventId
-        }
-    }
-
-    private fun getEventList_(current: List<TimelineEvent>): List<TimelineEvent> {
-        return current.first().previousEventId?.let { previous -> mappedEvents[previous]?.let { getEventList_(listOf(it)) }?.plus(current) } ?: current
-    }
-
-    fun getEventList(): List<TimelineEvent> {
-        return newestEvent?.let { eventId -> mappedEvents[eventId]?.let { getEventList_(listOf(it)) } } ?: emptyList()
-    }
-
-    suspend fun fetchMessages() {
-        if (mappedEvents.isEmpty()) {
-            client.room.getLastTimelineEvent(roomId = roomId)
-                .collectLatest { flowFlow ->
-                    flowFlow?.collectLatest { eventUnwrapped ->
-                        Log.d("Event added", eventUnwrapped.toString())
-                        mappedEvents[eventUnwrapped.eventId] = eventUnwrapped
-                        rescanEvents()
-                        if(eventUnwrapped.gap != null) {
-                            client.room.fillTimelineGaps(eventUnwrapped.eventId, roomId)
-                        }
-                        fetchMessages()
-                    }
-                }
-        } else {
-            suspend fun getPrevious(eventId: EventId, count: Int) {
-                client.room.getTimelineEvent(eventId, roomId)
-                    .collectLatest {
-                        it?.let { eventUnwrapped ->
-                            Log.d("Late Event added", eventUnwrapped.toString())
-                            mappedEvents[eventUnwrapped.eventId] = eventUnwrapped
-                            rescanEvents()
-                            if (count < 20) {
-                                eventUnwrapped.previousEventId?.let { it1 -> getPrevious(it1, count + 1) }
-                            }
-                        }
-                    }
-            }
-            getPrevious(getEventList().last().eventId, 0)
-        }
-    }
-
-    suspend fun clear() {
-        mappedEvents.clear()
-        fetchMessages()
-    }
 
     fun startSync() {
-        client.api.sync.subscribeAllEvents(listener)
+        timeline = client.roomService().getRoom(roomId)?.timelineService()
+            ?.createTimeline(null, TimelineSettings(initialSize = 25))
     }
 
     fun stopSync() {
-        client.api.sync.unsubscribeAllEvents(listener)
+        timeline?.let {
+            it.removeAllListeners()
+            it.dispose()
+        }
     }
 
-    fun splitEvents(): List<Pair<UserId, List<TimelineEvent>>> {
-        val list = mutableListOf<Pair<UserId, MutableList<TimelineEvent>>>()
+    fun splitEvents(): List<Pair<SenderInfo, List<TimelineEvent>>> {
+        val list = mutableListOf<Pair<SenderInfo, MutableList<TimelineEvent>>>()
 
-        var lastUserId: UserId? = null
+        var lastUserId: SenderInfo? = null
 
-        getEventList().filter {
-            it.event.content !is RedactionEventContent && it.event.content !is RedactedMessageEventContent
-        }.forEach {
-            if (lastUserId != null && it.event.sender == lastUserId) {
+        timelineEvents.forEach {
+            if (lastUserId != null && it.senderInfo == lastUserId) {
                 list.last().second.add(it)
             } else {
-                list.add(Pair(it.event.sender, mutableListOf(it)))
+                list.add(Pair(it.senderInfo, mutableListOf(it)))
             }
-            lastUserId = it.event.sender
+            lastUserId = it.senderInfo
         }
 
         return list.reversed()
     }
 
     suspend fun getName(consumer: suspend (String) -> Unit) {
-        client.room.getById(roomId)
-            .collectLatest {
-                if (it != null) {
-                    consumer(it.getHumanName())
-                }
-            }
+        consumer(roomId)
     }
 
-    suspend fun getRoomAvatar(consume: suspend (ByteArray) -> Unit) {
-        client.room.getById(roomId)
-            .collectLatest { room ->
-                if (room != null) {
-                    room.avatarUrl?.let { url ->
-                        client.api.media.download(url)
-                            .onSuccess {
-                                val bytes = ByteArray(it.contentLength!!.toInt())
-                                it.content.readFully(bytes, 0, it.contentLength!!.toInt())
-                                consume(bytes)
-                            }
-                    }
-                }
-            }
+    fun getRoomAvatar(consume: (String) -> Unit) {
+        client.roomService().getRoom(roomId)?.getRoomSummaryLive()?.observe(lifecycleOwner) { roomSummary ->
+            val roomSummaryAsMatrixItem =
+                roomSummary.map { it.toMatrixItem() }.getOrNull() ?: return@observe
+            getAvatarUrl(roomSummaryAsMatrixItem.avatarUrl)?.let { consume(it) }
+        }
     }
 
-    suspend fun getLastMessage(consumer: suspend (TimelineEvent) -> Unit) {
-        client.room.getLastTimelineEvent(roomId)
-            .collectLatest {
-                it?.first()?.let { consumer(it) }
+    fun getLastMessage(consumer: (TimelineEvent) -> Unit) {
+        client.roomService().getRoom(roomId)?.getRoomSummaryLive()?.observe(lifecycleOwner) { maybe ->
+            val roomSummary = maybe.getOrNull() ?: return@observe
+            roomSummary.latestPreviewableEvent?.let {
+                consumer(it)
             }
+        }
     }
 
-    suspend fun sendTextMessage(message: String) {
+    fun sendTextMessage(message: String) {
         Log.d("Sending Message", message)
-        client.room.getById(roomId).first()?.encryptionAlgorithm?.let {
-            Log.d("Room Encryption", it.toString())
-        }
-        client.room.sendMessage(roomId) {
-            text(message)
-        }
+
     }
 
-    suspend fun getAvatar(id: UserId, consume: suspend (ByteArray) -> Unit) {
-        client.api.users.getAvatarUrl(id)
-            .onSuccess { url ->
-                if (url != null) {
-                    client.api.media.download(url)
-                        .onSuccess {
-                            val bytes = ByteArray(it.contentLength!!.toInt())
-                            it.content.readFully(bytes, 0, it.contentLength!!.toInt())
-                            consume(bytes)
-                        }
-                }
-            }
+    fun getUserAvatar(id: String): String? {
+        return client.userService()
+            .getUser(id)
+            ?.avatarUrl?.let { getAvatarUrl(it) }
     }
 }

@@ -1,7 +1,6 @@
 package com.dfsek.dfchat.ui
 
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.util.Log
 import androidx.compose.foundation.background
@@ -10,8 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
@@ -26,50 +23,26 @@ import coil.compose.AsyncImage
 import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
 import com.dfsek.dfchat.RoomActivity
-import com.dfsek.dfchat.SettingsDropdown
-import com.dfsek.dfchat.parseEvent
-import com.dfsek.dfchat.state.LoginState
+import com.dfsek.dfchat.state.ChatRoomState
 import com.dfsek.dfchat.state.RoomsState
 import kotlinx.coroutines.launch
-import net.folivo.trixnity.client.store.Room
 
 
 @Composable
-fun AllRoomsScreen(activity: Activity, applicationContext: Context) {
-    Column {
-        SettingsDropdown(applicationContext, activity)
-        RoomList(activity)
-    }
-}
-
-@Composable
-fun RoomList(activity: Activity) {
-    LoginState.matrixClient?.let {
-        val scope = rememberCoroutineScope()
-        val roomsState = remember { RoomsState(it, scope) }
-        LazyColumn {
-            items(roomsState.rooms.values.toList().sortedBy { it.first?.event?.originTimestamp }.reversed()) {
-                RoomEntry(roomsState, it.second, activity)
-            }
-        }
-    }
-}
-
-@Composable
-fun RoomEntry(state: RoomsState, room: Room, activity: Activity) {
+fun RoomEntry(state: RoomsState, room: ChatRoomState, activity: Activity) {
     Row(modifier = Modifier.clickable {
         activity.startActivity(Intent(activity, RoomActivity::class.java).apply {
-            putExtra("room", room.roomId.full)
+            putExtra("room", room.roomId)
         })
     }) {
         val chatRoomState = state.getRoom(room.roomId)
-        var bytes by remember { mutableStateOf<ByteArray?>(null) }
+        var avatarUrl by remember { mutableStateOf<String?>(null) }
         var name by remember { mutableStateOf("") }
         var lastContent by remember { mutableStateOf("") }
         LaunchedEffect(room) {
             launch {
                 chatRoomState.getRoomAvatar {
-                    bytes = it
+                    avatarUrl = it
                 }
             }
             launch {
@@ -79,12 +52,12 @@ fun RoomEntry(state: RoomsState, room: Room, activity: Activity) {
             }
             launch {
                 chatRoomState.getLastMessage {
-                    lastContent = parseEvent(it.event.content)
+                    lastContent = it.root.toContentStringWithIndent()
                 }
             }
         }
 
-        bytes?.let {
+        avatarUrl?.let {
             Log.d("Channel Image", "Drawing image...")
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
