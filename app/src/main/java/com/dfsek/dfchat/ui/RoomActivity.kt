@@ -32,6 +32,7 @@ import com.dfsek.dfchat.state.ChatRoomState
 import com.dfsek.dfchat.util.SettingsDropdown
 import com.dfsek.dfchat.util.getText
 import kotlinx.coroutines.launch
+import org.matrix.android.sdk.api.session.room.sender.SenderInfo
 import org.matrix.android.sdk.api.session.room.timeline.TimelineEvent
 
 class RoomActivity : AppCompatActivity() {
@@ -145,7 +146,7 @@ class RoomActivity : AppCompatActivity() {
                 reverseLayout = true
             ) {
                 items(state.splitEvents()) {
-                    MessageBlock(state, userId = it.first.disambiguatedDisplayName, timelineEvents = it.second)
+                    MessageBlock(state, senderInfo = it.first, timelineEvents = it.second)
                 }
             }
         }
@@ -155,15 +156,15 @@ class RoomActivity : AppCompatActivity() {
     fun MessageBlock(
         state: ChatRoomState,
         modifier: Modifier = Modifier,
-        userId: String,
+        senderInfo: SenderInfo,
         timelineEvents: List<TimelineEvent>
     ) {
         Row(modifier = modifier) {
 
-            Log.d("Channel Image", "Drawing image...")
+            Log.d("User Image", "Drawing image...")
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(state.getUserAvatar(userId))
+                    .data(state.getUserAvatar(senderInfo.userId))
                     .crossfade(true)
                     .decoderFactory(BitmapFactoryDecoder.Factory())
                     .build(),
@@ -174,7 +175,7 @@ class RoomActivity : AppCompatActivity() {
 
 
             Column {
-                Text(userId, fontSize = 14.sp)
+                Text(senderInfo.disambiguatedDisplayName, fontSize = 14.sp)
                 timelineEvents.forEach { event ->
                     val content by remember { mutableStateOf(event.getText()) }
 
