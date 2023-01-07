@@ -27,4 +27,5 @@ TODO:
  - [ ] Display joined spaces
  - [ ] Space images
  - [ ] Voice calls
+ - [ ] System theme support
  - [ ] Notifications
