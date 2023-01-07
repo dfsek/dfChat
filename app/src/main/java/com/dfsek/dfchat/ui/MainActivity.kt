@@ -83,7 +83,7 @@ class MainActivity : AppCompatActivity() {
             activity.startActivity(Intent(activity, RoomActivity::class.java).apply {
                 putExtra("room", room.roomId)
             })
-        }) {
+        }.fillMaxWidth()) {
             var avatarUrl by remember { mutableStateOf<String?>(null) }
             val name = remember {room.displayName }
             val lastContent = remember { room.latestPreviewableEvent}
