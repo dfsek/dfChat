@@ -1,6 +1,5 @@
 package com.dfsek.dfchat.ui
 
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.compose.setContent
@@ -17,7 +16,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -33,10 +31,9 @@ import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
 import com.dfsek.dfchat.SessionHolder
 import com.dfsek.dfchat.state.ChatRoomState
-import com.dfsek.dfchat.ui.settings.SettingsActivity
 import com.dfsek.dfchat.util.RenderMessage
 import com.dfsek.dfchat.util.SettingsDropdown
-import com.dfsek.dfchat.util.getRawText
+import com.dfsek.dfchat.util.getPreviewText
 import kotlinx.coroutines.launch
 import org.matrix.android.sdk.api.session.getRoom
 import org.matrix.android.sdk.api.session.room.sender.SenderInfo
@@ -115,7 +112,7 @@ class RoomActivity : AppCompatActivity() {
             Column {
                 chatRoomState.replyTo?.let {
                     Text(
-                        text = "re: ${it.getRawText().substringBefore("\n")}",
+                        text = "re: ${it.getPreviewText().substringBefore("\n")}",
                         modifier = Modifier.clickable {
                             chatRoomState.replyTo = null
                         }.fillMaxWidth()

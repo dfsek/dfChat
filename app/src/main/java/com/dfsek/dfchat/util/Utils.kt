@@ -10,20 +10,16 @@ import androidx.browser.customtabs.CustomTabsIntent
 import androidx.browser.customtabs.CustomTabsSession
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LiveData
 import coil.compose.AsyncImage
 import coil.decode.BitmapFactoryDecoder
@@ -110,11 +106,17 @@ fun getAvatarUrl(avatarUrl: String?, thumbnailX: Int = 32, thumbnailY: Int = thu
 
 internal const val SSO_REDIRECT_URL = "dfchat://login"
 
-fun TimelineEvent.getRawText() = when (root.getClearType()) {
-    EventType.MESSAGE -> formatMessage(this)
-    EventType.ENCRYPTED -> "Encrypted message (haven't received keys!)"
+fun TimelineEvent.getPreviewText(): String {
+    val fullText = when (root.getClearType()) {
+        EventType.MESSAGE -> formatMessage(this)
+        EventType.ENCRYPTED -> "Encrypted message (haven't received keys!)"
 
-    else -> "dfChat unimplemented event ${root.getClearType()}"
+        else -> "dfChat unimplemented event ${root.getClearType()}"
+    }
+
+    val beforeNewline = fullText.substringBefore("\n")
+
+    return if(beforeNewline.length <= 50) beforeNewline else (beforeNewline.substring(0, 51).trim() + "...")
 }
 
 @Composable

@@ -25,18 +25,12 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import coil.compose.AsyncImagePainter
-import coil.compose.SubcomposeAsyncImage
-import coil.compose.SubcomposeAsyncImageContent
 import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
 import com.dfsek.dfchat.SessionHolder
-import com.dfsek.dfchat.state.ChatRoomState
 import com.dfsek.dfchat.util.SettingsDropdown
 import com.dfsek.dfchat.util.getAvatarUrl
-import com.dfsek.dfchat.util.getRawText
-import kotlinx.coroutines.launch
-import org.matrix.android.sdk.api.session.getRoom
+import com.dfsek.dfchat.util.getPreviewText
 import org.matrix.android.sdk.api.session.room.RoomSummaryQueryParams
 import org.matrix.android.sdk.api.session.room.model.RoomSummary
 
@@ -116,7 +110,7 @@ class MainActivity : AppCompatActivity() {
 
             Column {
                 Text(name, fontSize = 18.sp)
-                Text(lastContent?.getRawText() ?: "", fontSize = 12.sp)
+                Text(lastContent?.getPreviewText() ?: "", fontSize = 12.sp)
             }
         }
     }
