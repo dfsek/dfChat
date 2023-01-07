@@ -17,7 +17,7 @@ TODO:
  - [ ] Load messages upon scrolling up
  - [x] Markdown formatting
  - [ ] Message editing
- - [ ] Message redacting
+ - [x] Message redacting
  - [x] Message replies
  - [ ] Copy message text
  - [ ] Select message text
