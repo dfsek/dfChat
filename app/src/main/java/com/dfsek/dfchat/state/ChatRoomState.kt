@@ -79,6 +79,10 @@ class ChatRoomState(
             .sendTextMessage(text = message, autoMarkdown = true)
     }
 
+    fun redact(event: TimelineEvent) {
+        room.sendService().redactEvent(event = event.root, reason = null)
+    }
+
     fun getUserAvatar(id: String): String? {
         return client
             .userService()

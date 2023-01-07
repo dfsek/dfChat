@@ -202,6 +202,7 @@ class RoomActivity : AppCompatActivity() {
     @Composable
     fun Message(event: TimelineEvent) {
         var expanded by remember { mutableStateOf(false) }
+        var deleteDialogOpen by remember { mutableStateOf(false) }
         Row(modifier = Modifier.combinedClickable(
             onLongClick = {
                 expanded = true
@@ -210,6 +211,37 @@ class RoomActivity : AppCompatActivity() {
 
             }
         ).fillMaxWidth()) {
+            if(deleteDialogOpen) {
+                AlertDialog(
+                    onDismissRequest = {
+                        deleteDialogOpen = false
+                    },
+                    title = {
+                        Text("Redaction Confirmation")
+                    },
+                    text = {
+                        Column {
+                            Text("Are you sure you want to redact this event?")
+                            event.RenderMessage()
+                        }
+                    },
+                    confirmButton = {
+                        Button(onClick = {
+                            chatRoomState.redact(event)
+                            deleteDialogOpen = false
+                        }) {
+                            Text("Confirm")
+                        }
+                    },
+                    dismissButton = {
+                        Button(onClick = {
+                            deleteDialogOpen = false
+                        }) {
+                            Text("Cancel")
+                        }
+                    }
+                )
+            }
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = {
@@ -224,6 +256,15 @@ class RoomActivity : AppCompatActivity() {
                     enabled = true
                 ) {
                     Text("Reply")
+                }
+                DropdownMenuItem(
+                    onClick = {
+                        expanded = false
+                        deleteDialogOpen = true
+                    },
+                    enabled = true
+                ) {
+                    Text("Redact")
                 }
             }
             event.RenderMessage()
