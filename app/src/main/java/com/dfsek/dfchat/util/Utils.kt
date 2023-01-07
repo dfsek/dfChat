@@ -118,18 +118,18 @@ fun TimelineEvent.getRawText() = when (root.getClearType()) {
 }
 
 @Composable
-fun TimelineEvent.RenderMessage(): Unit = when (root.getClearType()) {
-    EventType.MESSAGE -> RenderMessageEvent()
+fun TimelineEvent.RenderMessage(modifier: Modifier = Modifier): Unit = when (root.getClearType()) {
+    EventType.MESSAGE -> RenderMessageEvent(modifier = modifier)
     EventType.ENCRYPTED -> Text("Encrypted message (haven't received keys!)", color = Color.Red)
 
     else -> Text("dfChat unimplemented event ${root.getClearType()}", color = Color.Red)
 }
 
 @Composable
-private fun TimelineEvent.RenderMessageEvent() {
+private fun TimelineEvent.RenderMessageEvent(modifier: Modifier = Modifier) {
     val messageContent = root.getClearContent().toModel<MessageContent>() ?: return
     when(messageContent.msgType) {
-        "m.text" -> MarkdownText(markdown = formatMessage(this))
+        "m.text" -> MarkdownText(markdown = formatMessage(this), modifier = modifier)
         "m.image" -> {
             val imageContent = root.getClearContent().toModel<MessageImageContent>() ?: return
             var imageUrl by remember { mutableStateOf<String?>(null) }
@@ -147,10 +147,11 @@ private fun TimelineEvent.RenderMessageEvent() {
                         .build(),
                     contentScale = ContentScale.Fit,
                     contentDescription = null,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = modifier.fillMaxWidth()
                 )
             } ?: Text("Rendering image...")
         }
+        else -> Text(formatMessage(this))
     }
 }
 

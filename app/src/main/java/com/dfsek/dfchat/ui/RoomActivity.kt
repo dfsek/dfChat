@@ -1,20 +1,21 @@
 package com.dfsek.dfchat.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.Button
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.material.TextField
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,8 +33,10 @@ import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
 import com.dfsek.dfchat.SessionHolder
 import com.dfsek.dfchat.state.ChatRoomState
+import com.dfsek.dfchat.ui.settings.SettingsActivity
 import com.dfsek.dfchat.util.RenderMessage
 import com.dfsek.dfchat.util.SettingsDropdown
+import com.dfsek.dfchat.util.getRawText
 import kotlinx.coroutines.launch
 import org.matrix.android.sdk.api.session.getRoom
 import org.matrix.android.sdk.api.session.room.sender.SenderInfo
@@ -109,17 +112,27 @@ class RoomActivity : AppCompatActivity() {
         var input by remember { mutableStateOf("") }
 
         Surface {
-            Row(modifier = modifier) {
-                TextField(value = input, onValueChange = {
-                    input = it
-                }, modifier = Modifier.weight(1f))
-                Button(onClick = {
-                    if (input.trim().isNotEmpty()) {
-                        onMessageSent(input)
-                        input = ""
+            Column {
+                chatRoomState.replyTo?.let {
+                    Text(
+                        text = "re: ${it.getRawText().substringBefore("\n")}",
+                        modifier = Modifier.clickable {
+                            chatRoomState.replyTo = null
+                        }.fillMaxWidth()
+                    )
+                }
+                Row(modifier = modifier) {
+                    TextField(value = input, onValueChange = {
+                        input = it
+                    }, modifier = Modifier.weight(1f))
+                    Button(onClick = {
+                        if (input.trim().isNotEmpty()) {
+                            onMessageSent(input)
+                            input = ""
+                        }
+                    }) {
+                        Text("Submit")
                     }
-                }) {
-                    Text("Submit")
                 }
             }
         }
@@ -180,10 +193,40 @@ class RoomActivity : AppCompatActivity() {
 
             Column {
                 Text(senderInfo.disambiguatedDisplayName, fontSize = 14.sp, style = TextStyle(fontWeight = FontWeight.Bold))
-                timelineEvents.forEach { event ->
-                    event.RenderMessage()
+                timelineEvents.forEach { Message(it) }
+            }
+        }
+    }
+
+    @OptIn(ExperimentalFoundationApi::class)
+    @Composable
+    fun Message(event: TimelineEvent) {
+        var expanded by remember { mutableStateOf(false) }
+        Row(modifier = Modifier.combinedClickable(
+            onLongClick = {
+                expanded = true
+            },
+            onClick = {
+
+            }
+        ).fillMaxWidth()) {
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = {
+                    expanded = false
+                }
+            ) {
+                DropdownMenuItem(
+                    onClick = {
+                        chatRoomState.replyTo = event
+                        expanded = false
+                    },
+                    enabled = true
+                ) {
+                    Text("Reply")
                 }
             }
+            event.RenderMessage()
         }
     }
 

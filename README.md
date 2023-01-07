@@ -18,6 +18,7 @@ TODO:
  - [x] Markdown formatting
  - [ ] Message editing
  - [ ] Message redacting
+ - [x] Message replies
  - [x] Cross Signing
  - [x] Encryption
  - [x] Open room

@@ -17,10 +17,8 @@ class ChatRoomState(
     val client: Session
 ) : Timeline.Listener {
     private var timeline: Timeline? by mutableStateOf(null)
+    var replyTo: TimelineEvent? by mutableStateOf(null)
     var timelineEvents: List<TimelineEvent> by mutableStateOf(emptyList())
-        private set
-
-    var latestEvent: TimelineEvent? by mutableStateOf(null)
         private set
 
 
@@ -73,8 +71,12 @@ class ChatRoomState(
 
     fun sendTextMessage(message: String) {
         Log.d("Sending Message", message)
-        room.sendService()
-            .sendTextMessage(message)
+        replyTo?.let {
+            replyTo = null
+            room.relationService()
+                .replyToMessage(eventReplied = it, replyText = message, autoMarkdown = true)
+        } ?: room.sendService()
+            .sendTextMessage(text = message, autoMarkdown = true)
     }
 
     fun getUserAvatar(id: String): String? {
