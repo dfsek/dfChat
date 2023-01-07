@@ -4,18 +4,30 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import android.widget.Toast
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.browser.customtabs.CustomTabsSession
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LiveData
+import coil.compose.AsyncImage
+import coil.decode.BitmapFactoryDecoder
+import coil.request.ImageRequest
 import com.dfsek.dfchat.SessionHolder
 import com.dfsek.dfchat.ui.settings.SettingsActivity
 import dev.jeziellago.compose.markdowntext.MarkdownText
@@ -23,6 +35,7 @@ import org.matrix.android.sdk.api.session.content.ContentUrlResolver
 import org.matrix.android.sdk.api.session.events.model.EventType
 import org.matrix.android.sdk.api.session.events.model.toModel
 import org.matrix.android.sdk.api.session.room.model.message.MessageContent
+import org.matrix.android.sdk.api.session.room.model.message.MessageImageContent
 import org.matrix.android.sdk.api.session.room.timeline.TimelineEvent
 
 fun openUrlInChromeCustomTab(
@@ -105,15 +118,45 @@ fun TimelineEvent.getRawText() = when (root.getClearType()) {
 }
 
 @Composable
-fun TimelineEvent.GetText(): Unit = when (root.getClearType()) {
-    EventType.MESSAGE -> MarkdownText(markdown = formatMessage(this))
+fun TimelineEvent.RenderMessage(): Unit = when (root.getClearType()) {
+    EventType.MESSAGE -> RenderMessageEvent()
     EventType.ENCRYPTED -> Text("Encrypted message (haven't received keys!)", color = Color.Red)
 
     else -> Text("dfChat unimplemented event ${root.getClearType()}", color = Color.Red)
 }
 
+@Composable
+private fun TimelineEvent.RenderMessageEvent() {
+    val messageContent = root.getClearContent().toModel<MessageContent>() ?: return
+    when(messageContent.msgType) {
+        "m.text" -> MarkdownText(markdown = formatMessage(this))
+        "m.image" -> {
+            val imageContent = root.getClearContent().toModel<MessageImageContent>() ?: return
+            var imageUrl by remember { mutableStateOf<String?>(null) }
+
+            LaunchedEffect(imageContent) {
+                imageUrl = SessionHolder.currentSession!!.contentUrlResolver().resolveFullSize(imageContent.url)
+            }
+
+            imageUrl?.let {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(it)
+                        .crossfade(true)
+                        .decoderFactory(BitmapFactoryDecoder.Factory())
+                        .build(),
+                    contentScale = ContentScale.Fit,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            } ?: Text("Rendering image...")
+        }
+    }
+}
+
 private fun formatMessage(timelineEvent: TimelineEvent): String {
     val messageContent = timelineEvent.root.getClearContent().toModel<MessageContent>() ?: return ""
+    Log.d("Message type", messageContent.toString())
     return messageContent.body
 }
 

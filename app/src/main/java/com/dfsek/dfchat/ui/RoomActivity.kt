@@ -31,7 +31,7 @@ import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
 import com.dfsek.dfchat.SessionHolder
 import com.dfsek.dfchat.state.ChatRoomState
-import com.dfsek.dfchat.util.GetText
+import com.dfsek.dfchat.util.RenderMessage
 import com.dfsek.dfchat.util.SettingsDropdown
 import kotlinx.coroutines.launch
 import org.matrix.android.sdk.api.session.getRoom
@@ -180,7 +180,7 @@ class RoomActivity : AppCompatActivity() {
             Column {
                 Text(senderInfo.disambiguatedDisplayName, fontSize = 14.sp, style = TextStyle(fontWeight = FontWeight.Bold))
                 timelineEvents.forEach { event ->
-                    event.GetText()
+                    event.RenderMessage()
                 }
             }
         }

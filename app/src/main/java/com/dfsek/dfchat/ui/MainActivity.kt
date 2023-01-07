@@ -30,6 +30,7 @@ import coil.request.ImageRequest
 import com.dfsek.dfchat.SessionHolder
 import com.dfsek.dfchat.state.ChatRoomState
 import com.dfsek.dfchat.util.SettingsDropdown
+import com.dfsek.dfchat.util.getAvatarUrl
 import com.dfsek.dfchat.util.getRawText
 import kotlinx.coroutines.launch
 import org.matrix.android.sdk.api.session.getRoom
@@ -46,6 +47,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
     @Composable
     fun AllRoomsScreen(activity: Activity, applicationContext: Context) {
         Column {
@@ -64,6 +66,7 @@ class MainActivity : AppCompatActivity() {
                     .observe(lifecycleOwner) {
                         rooms = it
                     }
+
             }
             LazyColumn {
                 items(rooms.sortedBy { it.latestPreviewableEvent?.root?.originServerTs }.reversed()) {
@@ -81,11 +84,15 @@ class MainActivity : AppCompatActivity() {
                 putExtra("room", room.roomId)
             })
         }) {
-            val avatarUrl = room.avatarUrl
-            val name = room.name
+            var avatarUrl by remember { mutableStateOf<String?>(null) }
+            val name = room.displayName
             val lastContent = room.latestPreviewableEvent
 
-            avatarUrl.let {
+            LaunchedEffect(room) {
+                avatarUrl = getAvatarUrl(room.avatarUrl)
+            }
+
+            avatarUrl?.let {
                 Log.d("Channel Image", "Drawing image...")
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
