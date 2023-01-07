@@ -14,6 +14,7 @@ TODO:
  - [ ] Preview images
  - [ ] Download images
  - [ ] Send images
+ - [ ] Load messages upon scrolling up
  - [x] Markdown formatting
  - [ ] Message editing
  - [ ] Message redacting

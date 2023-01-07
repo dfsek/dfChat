@@ -25,6 +25,9 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import coil.compose.AsyncImagePainter
+import coil.compose.SubcomposeAsyncImage
+import coil.compose.SubcomposeAsyncImageContent
 import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
 import com.dfsek.dfchat.SessionHolder
@@ -64,12 +67,15 @@ class MainActivity : AppCompatActivity() {
             LaunchedEffect(session) {
                 session.roomService().getRoomSummariesLive(RoomSummaryQueryParams.Builder().build())
                     .observe(lifecycleOwner) {
-                        rooms = it
+                        val reversed = it.sortedBy { it.latestPreviewableEvent?.root?.originServerTs }.reversed()
+                        Log.d("Rooms Reversed", reversed.equals(rooms).toString())
+                        rooms = reversed
                     }
-
             }
             LazyColumn {
-                items(rooms.sortedBy { it.latestPreviewableEvent?.root?.originServerTs }.reversed()) {
+                items(rooms, key = {
+                    it.roomId
+                }) {
                     Log.d("ROOM", it.roomId)
                     RoomEntry(it, activity)
                 }
@@ -85,8 +91,8 @@ class MainActivity : AppCompatActivity() {
             })
         }) {
             var avatarUrl by remember { mutableStateOf<String?>(null) }
-            val name = room.displayName
-            val lastContent = room.latestPreviewableEvent
+            val name = remember {room.displayName }
+            val lastContent = remember { room.latestPreviewableEvent}
 
             LaunchedEffect(room) {
                 avatarUrl = getAvatarUrl(room.avatarUrl)
@@ -109,7 +115,7 @@ class MainActivity : AppCompatActivity() {
             )
 
             Column {
-                Text(name ?: "", fontSize = 18.sp)
+                Text(name, fontSize = 18.sp)
                 Text(lastContent?.getRawText() ?: "", fontSize = 12.sp)
             }
         }

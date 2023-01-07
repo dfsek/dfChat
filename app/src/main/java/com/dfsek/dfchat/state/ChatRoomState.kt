@@ -64,10 +64,6 @@ class ChatRoomState(
 
     val name = room.roomSummary()?.displayName
 
-    val avatarUrl = getAvatarUrl(room.roomSummary()?.avatarUrl)
-
-    val lastEvent = room.roomSummary()?.latestPreviewableEvent
-
     fun getName(lifecycleOwner: LifecycleOwner, consume: (String) -> Unit) {
         room.getRoomSummaryLive().observe(lifecycleOwner) { roomSummary ->
             val summary = roomSummary.getOrNull() ?: return@observe
