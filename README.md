@@ -10,9 +10,11 @@ TODO:
  - [x] Persist login
  - [x] Display all joined rooms
  - [x] Room images
- - [ ] Render message images
+ - [x] Render message images
+ - [ ] Preview images
+ - [ ] Download images
  - [ ] Send images
- - [ ] Highlight links
+ - [x] Markdown formatting
  - [ ] Message editing
  - [ ] Message redacting
  - [x] Cross Signing
@@ -21,3 +23,4 @@ TODO:
  - [ ] Display joined spaces
  - [ ] Space images
  - [ ] Voice calls
+ - [ ] Notifications

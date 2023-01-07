@@ -16,6 +16,7 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -111,7 +112,7 @@ class RoomActivity : AppCompatActivity() {
             Row(modifier = modifier) {
                 TextField(value = input, onValueChange = {
                     input = it
-                })
+                }, modifier = Modifier.weight(1f))
                 Button(onClick = {
                     if (input.trim().isNotEmpty()) {
                         onMessageSent(input)
