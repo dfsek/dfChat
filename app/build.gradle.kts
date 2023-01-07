@@ -58,9 +58,15 @@ dependencies {
     implementation("androidx.room:room-ktx:$room_version")
 
 
-    implementation("org.matrix.android:matrix-android-sdk2:1.5.11")
+    implementation("org.matrix.android:matrix-android-sdk2:1.5.11") {
+        exclude("com.atlassian.commonmark")
+    }
 
-    implementation("com.github.jeziellago:compose-markdown:0.3.1")
+    val richtextVersion = "0.16.0"
+
+    implementation ("com.halilibo.compose-richtext:richtext-ui-material:$richtextVersion")
+    implementation ("com.halilibo.compose-richtext:richtext-commonmark:$richtextVersion")
+
 
     implementation("io.ktor:ktor-client-android:2.2.1")
     implementation("androidx.browser:browser:1.4.0")
