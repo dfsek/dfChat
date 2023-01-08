@@ -90,47 +90,44 @@ class RoomActivity : AppCompatActivity() {
 
     @Composable
     fun ImagePreviewUI(roomState: ChatRoomState) {
-        Column {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                IconButton(onClick = {
-                    roomState.selectedImageUrl = null
-                }) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Close"
-                    )
-                }
-            }
-            var scale by remember { mutableStateOf(1f) }
-            var translation by remember { mutableStateOf(Offset.Zero) }
+        var scale by remember { mutableStateOf(1f) }
+        var translation by remember { mutableStateOf(Offset.Zero) }
 
-            val maxScale = 8f
-            val minScale = 0.5f
+        val maxScale = 8f
+        val minScale = 0.5f
 
-            Box(modifier = Modifier.weight(1f)) {
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(roomState.selectedImageUrl)
-                        .crossfade(true)
-                        .decoderFactory(BitmapFactoryDecoder.Factory())
-                        .build(),
-                    contentScale = ContentScale.Fit,
-                    contentDescription = null,
-                    modifier = Modifier.align(Alignment.Center)
-                        .offset { IntOffset(translation.x.roundToInt(), translation.y.roundToInt()) }
-                        .graphicsLayer {
-                            scaleX = scale
-                            scaleY = scale
-                        }.clip(RectangleShape).fillMaxSize().pointerInput(Unit) {
-                            detectTransformGestures { centroid, pan, zoom, rotation ->
-                                scale = (scale * zoom).coerceIn(minScale..maxScale)
-                                translation = translation.plus(pan.times(scale))
-                            }
+        Box(modifier = Modifier) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(roomState.selectedImageUrl)
+                    .crossfade(true)
+                    .decoderFactory(BitmapFactoryDecoder.Factory())
+                    .build(),
+                contentScale = ContentScale.Fit,
+                contentDescription = null,
+                modifier = Modifier.align(Alignment.Center)
+                    .offset { IntOffset(translation.x.roundToInt(), translation.y.roundToInt()) }
+                    .graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                    }.clip(RectangleShape).fillMaxSize().pointerInput(Unit) {
+                        detectTransformGestures { centroid, pan, zoom, rotation ->
+                            scale = (scale * zoom).coerceIn(minScale..maxScale)
+                            translation = translation.plus(pan.times(scale))
                         }
-                        .clipToBounds()
+                    }
+                    .clipToBounds()
+            )
+        }
+        Row(modifier = Modifier.fillMaxWidth().background(Color.White.copy(alpha = 0.5f))) {
+            IconButton(onClick = {
+                roomState.selectedImageUrl = null
+            }) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close"
                 )
             }
-
         }
     }
 
