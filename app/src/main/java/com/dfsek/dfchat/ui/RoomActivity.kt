@@ -21,7 +21,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
@@ -36,7 +35,6 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.HorizontalAlignmentLine
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.TextStyle
@@ -83,13 +81,12 @@ class RoomActivity : AppCompatActivity() {
                             }
 
                         }
+                        RoomUI(
+                            roomState = state,
+                            modifier = Modifier
+                        )
                         if (state.selectedImageUrl != null) {
                             ImagePreviewUI(state)
-                        } else {
-                            RoomUI(
-                                roomState = state,
-                                modifier = Modifier
-                            )
                         }
                     }
                 }
@@ -105,7 +102,7 @@ class RoomActivity : AppCompatActivity() {
         val maxScale = 8f
         val minScale = 0.5f
 
-        Box(modifier = Modifier) {
+        Box(modifier = Modifier.background(Color.White).fillMaxSize()) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(roomState.selectedImageUrl)
@@ -230,7 +227,7 @@ class RoomActivity : AppCompatActivity() {
         Box (modifier = modifier.background(Color.White).fillMaxWidth()) {
             BackButton(modifier = Modifier.align(Alignment.CenterStart))
             Text(name, fontSize = 24.sp, modifier = Modifier.align(Alignment.Center))
-            SettingsDropdown(applicationContext, this@RoomActivity, modifier = Modifier.align(Alignment.CenterEnd))
+            SettingsDropdown(modifier = Modifier.align(Alignment.CenterEnd), applicationContext, this@RoomActivity)
         }
     }
 
@@ -238,7 +235,7 @@ class RoomActivity : AppCompatActivity() {
     fun BackButton(modifier: Modifier = Modifier) {
         IconButton(onClick = {
             finish()
-        }) {
+        }, modifier = modifier) {
             Icon(
                 imageVector = Icons.Default.KeyboardArrowLeft,
                 contentDescription = "Download"

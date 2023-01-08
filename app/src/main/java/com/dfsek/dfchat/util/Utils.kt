@@ -53,7 +53,7 @@ fun openUrlInChromeCustomTab(
 
 
 @Composable
-fun SettingsDropdown(applicationContext: Context, current: Context, refresh: () -> Unit = {}, modifier: Modifier = Modifier) {
+fun SettingsDropdown(modifier: Modifier = Modifier, applicationContext: Context, current: Context, refresh: () -> Unit = {}) {
     Box(
         modifier = modifier,
         contentAlignment = Alignment.Center

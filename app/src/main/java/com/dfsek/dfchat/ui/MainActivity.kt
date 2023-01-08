@@ -48,7 +48,7 @@ class MainActivity : AppCompatActivity() {
     @Composable
     fun AllRoomsScreen(activity: Activity, applicationContext: Context) {
         Column {
-            SettingsDropdown(applicationContext, activity)
+            SettingsDropdown(Modifier, applicationContext, activity)
             RoomList(activity)
         }
     }

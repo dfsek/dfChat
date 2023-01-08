@@ -17,6 +17,8 @@ TODO:
  - [ ] Load messages upon scrolling up
  - [x] Markdown formatting
  - [ ] Message editing
+ - [ ] Overwrite edited events
+ - [ ] Remove redacted events from local timeline
  - [x] Message redacting
  - [x] Message replies
  - [ ] Copy message text

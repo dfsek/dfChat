@@ -19,7 +19,7 @@ class ChatRoomState(
     private var timeline: Timeline? by mutableStateOf(null)
     var replyTo: TimelineEvent? by mutableStateOf(null)
     var selectedImageUrl: String? by mutableStateOf(null)
-    var timelineEvents: List<TimelineEvent> by mutableStateOf(emptyList())
+    private var timelineEvents: List<TimelineEvent> by mutableStateOf(emptyList())
         private set
 
 
@@ -30,7 +30,7 @@ class ChatRoomState(
 
     fun startSync() {
         timeline = room.timelineService()
-            .createTimeline(null, TimelineSettings(initialSize = 25)).also {
+            .createTimeline(null, TimelineSettings(initialSize = 35)).also {
                 it.addListener(this)
                 it.start()
             }
