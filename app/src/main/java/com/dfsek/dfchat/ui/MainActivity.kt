@@ -63,7 +63,7 @@ class MainActivity : AppCompatActivity() {
                     .observe(lifecycleOwner) {
                         val reversed = it.sortedBy { it.latestPreviewableEvent?.root?.originServerTs }.reversed()
                         Log.d("Rooms Reversed", reversed.equals(rooms).toString())
-                        rooms = reversed
+                        rooms = reversed.filter { it.isDirect }
                     }
             }
             LazyColumn {

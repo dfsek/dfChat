@@ -8,11 +8,9 @@ import android.util.Log
 import android.view.WindowManager
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -24,6 +22,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -81,12 +81,22 @@ class RoomActivity : AppCompatActivity() {
                             }
 
                         }
+                        val selectionUIOpen = remember { mutableStateOf(false) }
                         RoomUI(
                             roomState = state,
-                            modifier = Modifier
+                            modifier = Modifier,
+                            isSelectionOpen = selectionUIOpen
                         )
                         if (state.selectedImageUrl != null) {
                             ImagePreviewUI(state)
+                        }
+                        if(selectionUIOpen.value) {
+                            Box(modifier = Modifier.fillMaxSize().clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
+                                selectionUIOpen.value = false
+                            }) {
+                                RootSpacesSelection(modifier = Modifier, selectionUIOpen)
+                            }
+
                         }
                     }
                 }
@@ -155,6 +165,7 @@ class RoomActivity : AppCompatActivity() {
     fun RoomUI(
         roomState: ChatRoomState,
         modifier: Modifier,
+        isSelectionOpen: MutableState<Boolean>
     ) {
         val scrollState = rememberLazyListState()
         val scope = rememberCoroutineScope()
@@ -180,7 +191,7 @@ class RoomActivity : AppCompatActivity() {
                     }
                 }
 
-                RoomTopBar(roomName, Modifier.statusBarsPadding())
+                RoomTopBar(roomName, Modifier.statusBarsPadding(), isSelectionOpen)
             }
         }
     }
@@ -222,23 +233,24 @@ class RoomActivity : AppCompatActivity() {
     @Composable
     fun RoomTopBar(
         name: String,
-        modifier: Modifier
+        modifier: Modifier,
+        isSelectionOpen: MutableState<Boolean>
     ) {
         Box (modifier = modifier.background(Color.White).fillMaxWidth()) {
-            BackButton(modifier = Modifier.align(Alignment.CenterStart))
+            BackButton(modifier = Modifier.align(Alignment.CenterStart), isSelectionOpen)
             Text(name, fontSize = 24.sp, modifier = Modifier.align(Alignment.Center))
             SettingsDropdown(modifier = Modifier.align(Alignment.CenterEnd), applicationContext, this@RoomActivity)
         }
     }
 
     @Composable
-    fun BackButton(modifier: Modifier = Modifier) {
+    fun BackButton(modifier: Modifier = Modifier, isSelectionOpen: MutableState<Boolean>) {
         IconButton(onClick = {
-            finish()
+            isSelectionOpen.value = true
         }, modifier = modifier) {
             Icon(
-                imageVector = Icons.Default.KeyboardArrowLeft,
-                contentDescription = "Download"
+                imageVector = Icons.Default.KeyboardArrowRight,
+                contentDescription = "Spaces"
             )
         }
     }

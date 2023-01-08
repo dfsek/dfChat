@@ -2,7 +2,8 @@
 
 dfChat is a very simple Matrix client for Android. It is primarily intended for personal use,
 as I am unhappy with other available clients. I probably won't add more general-purpose features to
-it for that reason.
+it for that reason. The code is unlikely to be good as this is the first time I've ever touched
+Android.
 
 TODO:
 
@@ -26,8 +27,16 @@ TODO:
  - [x] Cross Signing
  - [x] Encryption
  - [x] Open room
- - [ ] Display joined spaces
- - [ ] Space images
+ - [x] Display joined spaces
+ - [x] Space images
+ - [ ] Join space rooms
+ - [ ] Join rooms from link
  - [ ] Voice calls
  - [ ] System theme support
  - [ ] Notifications
+
+Possible features:
+ - [ ] Edit redactions
+ - [ ] Retroactive replies
+ - [ ] Manual read receipts
+ - [ ] Mark room as unread
