@@ -23,15 +23,19 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -49,6 +53,7 @@ import org.matrix.android.sdk.api.session.room.model.message.MessageContent
 import org.matrix.android.sdk.api.session.room.model.message.MessageImageContent
 import org.matrix.android.sdk.api.session.room.sender.SenderInfo
 import org.matrix.android.sdk.api.session.room.timeline.TimelineEvent
+import kotlin.math.roundToInt
 
 class RoomActivity : AppCompatActivity() {
     private lateinit var chatRoomState: ChatRoomState
@@ -86,7 +91,7 @@ class RoomActivity : AppCompatActivity() {
     @Composable
     fun ImagePreviewUI(roomState: ChatRoomState) {
         Column {
-            Row {
+            Row(modifier = Modifier.fillMaxWidth()) {
                 IconButton(onClick = {
                     roomState.selectedImageUrl = null
                 }) {
@@ -101,35 +106,33 @@ class RoomActivity : AppCompatActivity() {
 
             val maxScale = 8f
             val minScale = 0.5f
-            fun calculateNewScale(k: Float): Float =
-                if ((scale <= maxScale && k > 1f) || (scale >= minScale && k < 1f)) scale * k else scale
 
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(roomState.selectedImageUrl)
-                    .crossfade(true)
-                    .decoderFactory(BitmapFactoryDecoder.Factory())
-                    .build(),
-                contentScale = ContentScale.None,
-                contentDescription = null,
-                modifier = Modifier.align(Alignment.CenterHorizontally).fillMaxSize()
-                    .pointerInput(Unit) {
-                        forEachGesture {
-                            awaitPointerEventScope {
-                                awaitFirstDown()
-                                do {
-                                    val event = awaitPointerEvent()
-                                    scale = calculateNewScale(event.calculateZoom())
-                                    translation = if (scale > 1) {
-                                        event.calculatePan().plus(translation)
-                                    } else {
-                                        Offset.Zero
-                                    }
-                                } while (event.changes.any { it.pressed })
+            Box(modifier = Modifier.weight(1f)) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(roomState.selectedImageUrl)
+                        .crossfade(true)
+                        .decoderFactory(BitmapFactoryDecoder.Factory())
+                        .build(),
+                    contentScale = ContentScale.Fit,
+                    contentDescription = null,
+                    modifier = Modifier.align(Alignment.Center)
+                        .offset { IntOffset(translation.x.roundToInt(), translation.y.roundToInt()) }
+                        .graphicsLayer {
+                            scaleX = scale
+                            scaleY = scale
+                        }.clip(RectangleShape).fillMaxSize().pointerInput(Unit) {
+                            detectTransformGestures { centroid, pan, zoom, rotation ->
+                                scale = (scale * zoom).coerceIn(minScale..maxScale)
+                            }
+                            detectDragGestures { change, dragAmount ->
+                                translation = translation.plus(dragAmount)
                             }
                         }
-                    }
-            )
+                        .clipToBounds()
+                )
+            }
+
         }
     }
 
