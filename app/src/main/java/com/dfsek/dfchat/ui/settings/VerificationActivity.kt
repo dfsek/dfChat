@@ -6,9 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.Button
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import com.dfsek.dfchat.SessionHolder
@@ -22,19 +20,20 @@ class VerificationActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            SessionHolder.currentSession?.let { session ->
-                val state = VerificationState(session)
-                Surface(modifier = Modifier.fillMaxSize()) {
-                    DynamicContent(state.devices) {
-                        Column {
-                            Verification(state)
-                            it.forEach {
-                                Device(it)
+            MaterialTheme(colors = darkColors()) {
+                SessionHolder.currentSession?.let { session ->
+                    val state = VerificationState(session)
+                    Surface(modifier = Modifier.fillMaxSize()) {
+                        DynamicContent(state.devices) {
+                            Column {
+                                Verification(state)
+                                it.forEach {
+                                    Device(it)
+                                }
                             }
                         }
                     }
                 }
-
             }
         }
     }
@@ -58,7 +57,11 @@ class VerificationActivity : AppCompatActivity() {
     @Composable
     fun Verification(state: VerificationState) {
         var pendingStart: PendingVerificationRequest? by remember { mutableStateOf(null) }
-        var incomingPendingAccept: Pair<IncomingSasVerificationTransaction.UxState, IncomingSasVerificationTransaction>? by remember { mutableStateOf(null) }
+        var incomingPendingAccept: Pair<IncomingSasVerificationTransaction.UxState, IncomingSasVerificationTransaction>? by remember {
+            mutableStateOf(
+                null
+            )
+        }
 
         listener = remember {
             object : VerificationService.Listener {
@@ -132,7 +135,7 @@ class VerificationActivity : AppCompatActivity() {
             buttonText?.let {
                 Button(onClick = {
                     incomingPendingAccept = null
-                    if(transaction.first == IncomingSasVerificationTransaction.UxState.SHOW_SAS) {
+                    if (transaction.first == IncomingSasVerificationTransaction.UxState.SHOW_SAS) {
                         transaction.second.userHasVerifiedShortCode()
                     } else {
                         transaction.second.performAccept()

@@ -27,8 +27,10 @@ import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
 import com.dfsek.dfchat.SessionHolder
 import com.dfsek.dfchat.ui.settings.SettingsActivity
+import com.google.android.material.color.MaterialColors
 import com.halilibo.richtext.markdown.Markdown
 import com.halilibo.richtext.ui.RichText
+import com.halilibo.richtext.ui.RichTextThemeIntegration
 import org.matrix.android.sdk.api.session.content.ContentUrlResolver
 import org.matrix.android.sdk.api.session.events.model.EventType
 import org.matrix.android.sdk.api.session.events.model.toModel
@@ -134,8 +136,10 @@ fun TimelineEvent.RenderMessage(modifier: Modifier = Modifier): Unit = when (roo
 private fun TimelineEvent.RenderMessageEvent(modifier: Modifier = Modifier) {
     val messageContent = root.getClearContent().toModel<MessageContent>() ?: return
     when(messageContent.msgType) {
-        "m.text" -> RichText(modifier = modifier) {
-            Markdown(content = formatMessage(this@RenderMessageEvent))
+        "m.text" -> RichTextThemeIntegration(contentColor = { MaterialTheme.colors.onBackground }) {
+            RichText(modifier = modifier) {
+                Markdown(content = formatMessage(this@RenderMessageEvent))
+            }
         }
         "m.image" -> {
             val imageContent = root.getClearContent().toModel<MessageImageContent>() ?: return

@@ -10,7 +10,6 @@ import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.*
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -21,9 +20,6 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,7 +44,6 @@ import coil.request.ImageRequest
 import com.dfsek.dfchat.SessionHolder
 import com.dfsek.dfchat.state.ChatRoomState
 import com.dfsek.dfchat.util.RenderMessage
-import com.dfsek.dfchat.util.SettingsDropdown
 import com.dfsek.dfchat.util.getPreviewText
 import kotlinx.coroutines.launch
 import org.matrix.android.sdk.api.session.events.model.toModel
@@ -64,33 +59,32 @@ class RoomActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
-
-
         setContent {
-            intent.getStringExtra("room")?.let { roomId ->
-                SessionHolder.currentSession?.let { session ->
-                    session.getRoom(roomId)?.let {
-                        val state = remember {
-                            ChatRoomState(
-                                room = it,
-                                client = session
-                            ).also {
-                                it.startSync()
-                                chatRoomState = it
+            MaterialTheme(colors = darkColors()) {
+                Surface {
+                    intent.getStringExtra("room")?.let { roomId ->
+                        SessionHolder.currentSession?.let { session ->
+                            session.getRoom(roomId)?.let {
+                                val state = remember {
+                                    ChatRoomState(
+                                        room = it,
+                                        client = session
+                                    ).also {
+                                        it.startSync()
+                                        chatRoomState = it
+                                    }
+                                }
+                                val selectionUIOpen = remember { mutableStateOf(false) }
+                                RoomUI(
+                                    roomState = state,
+                                    isSelectionOpen = selectionUIOpen
+                                )
+                                if (state.selectedImageUrl != null) {
+                                    ImagePreviewUI(state)
+                                }
+                                SelectionUI(selectionUIOpen)
                             }
-
                         }
-                        val selectionUIOpen = remember { mutableStateOf(false) }
-                        RoomUI(
-                            roomState = state,
-                            modifier = Modifier,
-                            isSelectionOpen = selectionUIOpen
-                        )
-                        if (state.selectedImageUrl != null) {
-                            ImagePreviewUI(state)
-                        }
-                        SelectionUI(selectionUIOpen)
                     }
                 }
             }
@@ -105,7 +99,7 @@ class RoomActivity : AppCompatActivity() {
         val maxScale = 8f
         val minScale = 0.5f
 
-        Box(modifier = Modifier.background(Color.White).fillMaxSize()) {
+        Box(modifier = Modifier.background(MaterialTheme.colors.background).fillMaxSize()) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(roomState.selectedImageUrl)
@@ -128,7 +122,7 @@ class RoomActivity : AppCompatActivity() {
                     .clipToBounds()
             )
         }
-        Row(modifier = Modifier.fillMaxWidth().background(Color.White.copy(alpha = 0.5f))) {
+        Row(modifier = Modifier.fillMaxWidth().background(MaterialTheme.colors.onBackground.copy(alpha = 0.5f))) {
             IconButton(onClick = {
                 roomState.selectedImageUrl = null
             }) {
@@ -157,12 +151,11 @@ class RoomActivity : AppCompatActivity() {
     @Composable
     fun RoomUI(
         roomState: ChatRoomState,
-        modifier: Modifier,
         isSelectionOpen: MutableState<Boolean>
     ) {
         val scrollState = rememberLazyListState()
         val scope = rememberCoroutineScope()
-        Surface(modifier = modifier) {
+        Surface {
             Box(modifier = Modifier.fillMaxSize()) {
                 Column(modifier = Modifier.fillMaxSize()) {
                     RoomMessages(roomState, scrollState, Modifier.weight(1f))
@@ -184,7 +177,7 @@ class RoomActivity : AppCompatActivity() {
                     }
                 }
 
-                RoomTopBar(roomName, Modifier.statusBarsPadding(), isSelectionOpen)
+                TopBar(roomName, Modifier.statusBarsPadding(), isSelectionOpen)
             }
         }
     }

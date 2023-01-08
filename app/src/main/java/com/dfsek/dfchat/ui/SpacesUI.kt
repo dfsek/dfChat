@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -46,7 +47,7 @@ fun Activity.RootSpacesSelection(modifier: Modifier = Modifier, isOpen: MutableS
     Column(modifier = modifier
         .fillMaxWidth(0.75f)
         .fillMaxHeight()
-        .background(Color.White)
+        .background(MaterialTheme.colors.background)
         .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {}) {
         var rootSpaces by remember { mutableStateOf<List<Room>>(emptyList()) }
         val session = remember { SessionHolder.currentSession as Session }
@@ -185,14 +186,16 @@ fun BackButton(modifier: Modifier = Modifier, isSelectionOpen: MutableState<Bool
 }
 
 @Composable
-fun Activity.RoomTopBar(
+fun Activity.TopBar(
     name: String,
     modifier: Modifier,
     isSelectionOpen: MutableState<Boolean>
 ) {
-    Box (modifier = modifier.background(Color.White).fillMaxWidth()) {
+    Box (modifier = modifier
+        .background(MaterialTheme.colors.surface)
+        .fillMaxWidth()) {
         BackButton(modifier = Modifier.align(Alignment.CenterStart), isSelectionOpen)
-        Text(name, fontSize = 24.sp, modifier = Modifier.align(Alignment.Center))
+        Text(name, fontSize = 24.sp, modifier = Modifier.align(Alignment.Center), color = MaterialTheme.colors.onSurface)
         SettingsDropdown(modifier = Modifier.align(Alignment.CenterEnd))
     }
 }

@@ -12,10 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.Button
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.material.TextField
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -65,16 +62,19 @@ class AccountActivity : AppCompatActivity() {
             }
         }
         setContent {
-            Surface(modifier = Modifier.fillMaxSize()) {
-                Column {
-                    val client = SessionHolder.currentSession
-                    if (client == null) {
-                        LoginForm()
-                    } else {
-                        CurrentUser(client)
+            MaterialTheme(colors = darkColors()) {
+                Surface(modifier = Modifier.fillMaxSize()) {
+                    Column {
+                        val client = SessionHolder.currentSession
+                        if (client == null) {
+                            LoginForm()
+                        } else {
+                            CurrentUser(client)
+                        }
                     }
                 }
             }
+
         }
     }
 
