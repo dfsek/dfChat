@@ -124,9 +124,7 @@ class RoomActivity : AppCompatActivity() {
                         }.clip(RectangleShape).fillMaxSize().pointerInput(Unit) {
                             detectTransformGestures { centroid, pan, zoom, rotation ->
                                 scale = (scale * zoom).coerceIn(minScale..maxScale)
-                            }
-                            detectDragGestures { change, dragAmount ->
-                                translation = translation.plus(dragAmount)
+                                translation = translation.plus(pan.times(scale))
                             }
                         }
                         .clipToBounds()
