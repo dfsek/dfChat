@@ -32,7 +32,8 @@
         <activity
                 android:name=".ui.RoomActivity"
                 android:exported="true"
-                android:theme="@style/Theme.DfChat.NoActionBar">
+                android:theme="@style/Theme.DfChat.NoActionBar"
+                android:windowSoftInputMode="adjustResize">
 
             <meta-data
                     android:name="android.app.lib_name"

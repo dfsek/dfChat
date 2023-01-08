@@ -1,7 +1,11 @@
 package com.dfsek.dfchat.ui
 
+import android.app.DownloadManager
+import android.content.Context
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.view.WindowManager
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -17,20 +21,22 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.HorizontalAlignmentLine
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.TextStyle
@@ -59,6 +65,9 @@ class RoomActivity : AppCompatActivity() {
     private lateinit var chatRoomState: ChatRoomState
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+
 
         setContent {
             intent.getStringExtra("room")?.let { roomId ->
@@ -126,6 +135,20 @@ class RoomActivity : AppCompatActivity() {
                 Icon(
                     imageVector = Icons.Default.Close,
                     contentDescription = "Close"
+                )
+            }
+            IconButton(onClick = {
+                Log.d("Downloading image", chatRoomState.selectedImageUrl.toString())
+                val manager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+                val uri = Uri.parse(chatRoomState.selectedImageUrl)
+                val request = DownloadManager.Request(uri)
+                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
+                val enqueue = manager.enqueue(request)
+                Log.d("Request queued", enqueue.toString())
+            }) {
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowDown,
+                    contentDescription = "Download"
                 )
             }
         }
@@ -204,9 +227,22 @@ class RoomActivity : AppCompatActivity() {
         name: String,
         modifier: Modifier
     ) {
-        Row(modifier = modifier.background(Color.White).fillMaxWidth()) {
-            SettingsDropdown(applicationContext, this@RoomActivity)
-            Text(name, fontSize = 24.sp)
+        Box (modifier = modifier.background(Color.White).fillMaxWidth()) {
+            BackButton(modifier = Modifier.align(Alignment.CenterStart))
+            Text(name, fontSize = 24.sp, modifier = Modifier.align(Alignment.Center))
+            SettingsDropdown(applicationContext, this@RoomActivity, modifier = Modifier.align(Alignment.CenterEnd))
+        }
+    }
+
+    @Composable
+    fun BackButton(modifier: Modifier = Modifier) {
+        IconButton(onClick = {
+            finish()
+        }) {
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowLeft,
+                contentDescription = "Download"
+            )
         }
     }
 

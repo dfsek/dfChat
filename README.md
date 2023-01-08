@@ -11,7 +11,7 @@ TODO:
  - [x] Display all joined rooms
  - [x] Room images
  - [x] Render message images
- - [ ] Preview images
+ - [x] Preview images
  - [ ] Download images
  - [ ] Send images
  - [ ] Load messages upon scrolling up
