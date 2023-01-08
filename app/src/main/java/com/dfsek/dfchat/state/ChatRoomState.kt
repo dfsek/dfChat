@@ -18,6 +18,7 @@ class ChatRoomState(
 ) : Timeline.Listener {
     private var timeline: Timeline? by mutableStateOf(null)
     var replyTo: TimelineEvent? by mutableStateOf(null)
+    var selectedImageUrl: String? by mutableStateOf(null)
     var timelineEvents: List<TimelineEvent> by mutableStateOf(emptyList())
         private set
 
