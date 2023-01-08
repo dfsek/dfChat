@@ -90,14 +90,7 @@ class RoomActivity : AppCompatActivity() {
                         if (state.selectedImageUrl != null) {
                             ImagePreviewUI(state)
                         }
-                        if(selectionUIOpen.value) {
-                            Box(modifier = Modifier.fillMaxSize().clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
-                                selectionUIOpen.value = false
-                            }) {
-                                RootSpacesSelection(modifier = Modifier, selectionUIOpen)
-                            }
-
-                        }
+                        SelectionUI(selectionUIOpen)
                     }
                 }
             }
@@ -230,30 +223,6 @@ class RoomActivity : AppCompatActivity() {
         }
     }
 
-    @Composable
-    fun RoomTopBar(
-        name: String,
-        modifier: Modifier,
-        isSelectionOpen: MutableState<Boolean>
-    ) {
-        Box (modifier = modifier.background(Color.White).fillMaxWidth()) {
-            BackButton(modifier = Modifier.align(Alignment.CenterStart), isSelectionOpen)
-            Text(name, fontSize = 24.sp, modifier = Modifier.align(Alignment.Center))
-            SettingsDropdown(modifier = Modifier.align(Alignment.CenterEnd), applicationContext, this@RoomActivity)
-        }
-    }
-
-    @Composable
-    fun BackButton(modifier: Modifier = Modifier, isSelectionOpen: MutableState<Boolean>) {
-        IconButton(onClick = {
-            isSelectionOpen.value = true
-        }, modifier = modifier) {
-            Icon(
-                imageVector = Icons.Default.KeyboardArrowRight,
-                contentDescription = "Spaces"
-            )
-        }
-    }
 
     @Composable
     fun RoomMessages(

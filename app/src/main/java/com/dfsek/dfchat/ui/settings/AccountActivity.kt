@@ -30,7 +30,7 @@ import coil.request.ImageRequest
 import com.dfsek.dfchat.DfChat
 import com.dfsek.dfchat.SessionHolder
 import com.dfsek.dfchat.state.UserState
-import com.dfsek.dfchat.ui.MainActivity
+import com.dfsek.dfchat.ui.rooms.DirectMessagesActivity
 import com.dfsek.dfchat.util.SSO_REDIRECT_URL
 import com.dfsek.dfchat.util.openUrlInChromeCustomTab
 import kotlinx.coroutines.CoroutineScope
@@ -56,7 +56,7 @@ class AccountActivity : AppCompatActivity() {
                         .loginWithToken(token)
 
                     runOnUiThread {
-                        startActivity(Intent(applicationContext, MainActivity::class.java))
+                        startActivity(Intent(applicationContext, DirectMessagesActivity::class.java))
                         finish()
                     }
                 } catch (e: Exception) {

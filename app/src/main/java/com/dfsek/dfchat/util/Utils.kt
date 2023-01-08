@@ -1,5 +1,6 @@
 package com.dfsek.dfchat.util
 
+import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -53,7 +54,7 @@ fun openUrlInChromeCustomTab(
 
 
 @Composable
-fun SettingsDropdown(modifier: Modifier = Modifier, applicationContext: Context, current: Context, refresh: () -> Unit = {}) {
+fun Activity.SettingsDropdown(modifier: Modifier = Modifier, refresh: () -> Unit = {}) {
     Box(
         modifier = modifier,
         contentAlignment = Alignment.Center
@@ -77,7 +78,7 @@ fun SettingsDropdown(modifier: Modifier = Modifier, applicationContext: Context,
         ) {
             DropdownMenuItem(
                 onClick = {
-                    current.startActivity(Intent(applicationContext, SettingsActivity::class.java))
+                    startActivity(Intent(applicationContext, SettingsActivity::class.java))
                     expanded = false
                 },
                 enabled = true

@@ -14,8 +14,9 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -27,6 +28,9 @@ import coil.compose.AsyncImage
 import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
 import com.dfsek.dfchat.SessionHolder
+import com.dfsek.dfchat.ui.rooms.DirectMessagesActivity
+import com.dfsek.dfchat.ui.rooms.GroupMessagesActivity
+import com.dfsek.dfchat.util.SettingsDropdown
 import com.dfsek.dfchat.util.getAvatarUrl
 import com.dfsek.dfchat.util.getPreviewText
 import org.matrix.android.sdk.api.query.SpaceFilter
@@ -81,16 +85,38 @@ fun Activity.RootSpacesSelection(modifier: Modifier = Modifier, isOpen: MutableS
                 )
             }
         }
-
+        val avatarSize = 32
         LazyColumn {
-            item {
-                Row(modifier = Modifier.fillMaxWidth().clickable {
-                    runOnUiThread {
-                        startActivity(Intent(applicationContext, MainActivity::class.java))
-                        finish()
+            if(spaceStack.empty()) {
+                item {
+                    Row(modifier = Modifier.fillMaxWidth().clickable {
+                        runOnUiThread {
+                            startActivity(Intent(applicationContext, DirectMessagesActivity::class.java))
+                            finish()
+                        }
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Direct Messages",
+                            modifier = Modifier.size(avatarSize.dp)
+                        )
+                        Text("Direct Messages", fontSize = 18.sp)
                     }
-                }) {
-                    Text("Direct Messages", fontSize = 24.sp)
+                }
+                item {
+                    Row(modifier = Modifier.fillMaxWidth().clickable {
+                        runOnUiThread {
+                            startActivity(Intent(applicationContext, GroupMessagesActivity::class.java))
+                            finish()
+                        }
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Email,
+                            contentDescription = "Group Messages",
+                            modifier = Modifier.size(avatarSize.dp)
+                        )
+                        Text("Group Messages", fontSize = 18.sp)
+                    }
                 }
             }
 
@@ -116,7 +142,7 @@ fun Activity.RootSpacesSelection(modifier: Modifier = Modifier, isOpen: MutableS
                     val name = remember { room.roomSummary()?.displayName ?: "" }
                     val lastContent = remember { room.roomSummary()?.latestPreviewableEvent }
 
-                    val avatarSize = 32
+
                     LaunchedEffect(room) {
                         avatarUrl = getAvatarUrl(room.roomSummary()?.avatarUrl, avatarSize)
                     }
@@ -142,6 +168,42 @@ fun Activity.RootSpacesSelection(modifier: Modifier = Modifier, isOpen: MutableS
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun BackButton(modifier: Modifier = Modifier, isSelectionOpen: MutableState<Boolean>) {
+    IconButton(onClick = {
+        isSelectionOpen.value = true
+    }, modifier = modifier) {
+        Icon(
+            imageVector = Icons.Default.KeyboardArrowRight,
+            contentDescription = "Spaces"
+        )
+    }
+}
+
+@Composable
+fun Activity.RoomTopBar(
+    name: String,
+    modifier: Modifier,
+    isSelectionOpen: MutableState<Boolean>
+) {
+    Box (modifier = modifier.background(Color.White).fillMaxWidth()) {
+        BackButton(modifier = Modifier.align(Alignment.CenterStart), isSelectionOpen)
+        Text(name, fontSize = 24.sp, modifier = Modifier.align(Alignment.Center))
+        SettingsDropdown(modifier = Modifier.align(Alignment.CenterEnd))
+    }
+}
+
+@Composable
+fun Activity.SelectionUI(isSelectionOpen: MutableState<Boolean>) {
+    if(isSelectionOpen.value) {
+        Box(modifier = Modifier.fillMaxSize().clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
+            isSelectionOpen.value = false
+        }) {
+            RootSpacesSelection(modifier = Modifier, isSelectionOpen)
         }
     }
 }
