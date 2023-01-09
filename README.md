@@ -9,11 +9,8 @@ TODO:
 
  - [x] SSO sign in
  - [ ] Username/password sign in
- - [x] Persist login
- - [x] Display all joined rooms
- - [x] Room images
  - [x] Render message images
- - [ ] Render encrypted message images
+ - [x] Render encrypted message images
  - [x] Preview images
  - [ ] Download images
  - [ ] Send images
@@ -23,13 +20,12 @@ TODO:
  - [x] Message redacting
  - [x] Message replies
  - [ ] Message editing
+ - [ ] Special rendering for replies
  - [x] Copy message text
  - [ ] Select message text
  - [x] Cross Signing
  - [x] Encryption
- - [x] Open room
  - [x] Display joined spaces
- - [x] Space images
  - [ ] Join space rooms
  - [ ] Join rooms from link
  - [ ] Voice calls
