@@ -41,6 +41,9 @@ class SettingsActivity : AppCompatActivity() {
             item {
                 SettingsItem("Verification", VerificationActivity::class)
             }
+            item {
+                SettingsItem("Theme", ThemeActivity::class)
+            }
         }
     }
 

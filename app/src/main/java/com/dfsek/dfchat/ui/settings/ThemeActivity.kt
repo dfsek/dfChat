@@ -5,18 +5,20 @@ import android.os.Bundle
 import android.os.PersistableBundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.RadioButton
+import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.edit
+import com.dfsek.dfchat.AppState
+import com.dfsek.dfchat.AppState.updateTheme
 import com.dfsek.dfchat.util.THEME_KEY
 import com.dfsek.dfchat.util.THEME_PREFS
 
@@ -24,9 +26,13 @@ class ThemeActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val preferences = remember {getSharedPreferences(THEME_PREFS, MODE_PRIVATE) }
+            val preferences = remember { getSharedPreferences(THEME_PREFS, MODE_PRIVATE) }
 
-            ThemeSelector(preferences)
+            MaterialTheme(colors = AppState.themeColors) {
+                Surface(modifier = Modifier.fillMaxSize()) {
+                    ThemeSelector(preferences)
+                }
+            }
         }
     }
 
@@ -40,28 +46,29 @@ class ThemeActivity : AppCompatActivity() {
                 putString(THEME_KEY, theme)
             }
             currentTheme = theme
+            updateTheme()
         }
 
         Column {
             Text("Theme", fontSize = 18.sp)
             themes.forEach {
                 Row(modifier = Modifier
-                        .fillMaxWidth()
-                        .selectable(
-                            selected = (it == currentTheme),
-                            onClick = {
-                                setTheme(it)
-                            }
-                        )
-                        .padding(horizontal = 16.dp)
+                    .fillMaxWidth()
+                    .selectable(
+                        selected = (it == currentTheme),
+                        onClick = {
+                            setTheme(it)
+                        }
+                    )
                 ) {
                     RadioButton(
+                        modifier = Modifier.align(Alignment.CenterVertically),
                         selected = (it == currentTheme),
                         onClick = { setTheme(it) }
                     )
                     Text(
+                        modifier = Modifier.align(Alignment.CenterVertically),
                         text = it,
-                        modifier = Modifier.padding(start = 16.dp)
                     )
                 }
             }

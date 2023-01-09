@@ -34,6 +34,7 @@ class VerificationActivity : AppCompatActivity() {
                         }
                     }
                 }
+
             }
         }
     }
