@@ -20,6 +20,9 @@ TODO:
  - [x] Message redacting
  - [x] Message replies
  - [ ] Message editing
+ - [ ] Display reactions
+ - [ ] Add reactions
+ - [ ] Type emoji with `:`
  - [ ] Special rendering for replies
  - [x] Copy message text
  - [ ] Select message text
@@ -32,6 +35,8 @@ TODO:
  - [x] System theme support
  - [x] Custom theme support
  - [ ] Notifications
+ - [ ] Read receipts
+ - [ ] Typing indicators
 
 Possible features:
  - [ ] Edit redactions
