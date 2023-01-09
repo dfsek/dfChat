@@ -13,6 +13,7 @@ TODO:
  - [x] Display all joined rooms
  - [x] Room images
  - [x] Render message images
+ - [ ] Render encrypted message images
  - [x] Preview images
  - [ ] Download images
  - [ ] Send images

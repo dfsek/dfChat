@@ -21,6 +21,7 @@ import org.matrix.android.sdk.api.session.events.model.toModel
 import org.matrix.android.sdk.api.session.room.model.message.MessageContent
 import org.matrix.android.sdk.api.session.room.model.message.MessageImageContent
 import org.matrix.android.sdk.api.session.room.timeline.TimelineEvent
+import java.io.File
 
 @Composable
 fun TimelineEvent.RenderMessage(modifier: Modifier = Modifier): Unit = when (root.getClearType()) {
@@ -42,13 +43,15 @@ private fun TimelineEvent.RenderMessageEvent(modifier: Modifier = Modifier) {
 
         "m.image" -> {
             val imageContent = root.getClearContent().toModel<MessageImageContent>() ?: return
-            var imageUrl by remember { mutableStateOf<String?>(null) }
+            Log.d("IMAGE CONTENT", imageContent.toString())
+
+            var image by remember { mutableStateOf<File?>(null) }
 
             LaunchedEffect(imageContent) {
-                imageUrl = AppState.session!!.contentUrlResolver().resolveFullSize(imageContent.url)
+                image = AppState.session!!.fileService().downloadFile(imageContent)
             }
 
-            imageUrl?.let {
+            image?.let {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
                         .data(it)
