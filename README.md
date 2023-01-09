@@ -33,7 +33,7 @@ TODO:
  - [ ] Join rooms from link
  - [ ] Voice calls
  - [x] System theme support
- - [ ] Custom theme support
+ - [x] Custom theme support
  - [ ] Notifications
 
 Possible features:

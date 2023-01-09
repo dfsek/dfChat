@@ -180,3 +180,15 @@ fun <T> DynamicContent(data: LiveData<T>, consume: @Composable (T) -> Unit) {
     data.observe(lifecycleOwner) { value = it }
     value?.let { consume(it) }
 }
+
+
+fun Color.toHexString(): String {
+    return String.format(
+        "#%02x%02x%02x%02x", (this.alpha * 255).toInt(),
+        (this.red * 255).toInt(), (this.green * 255).toInt(), (this.blue * 255).toInt()
+    )
+}
+
+fun String.toColor(): Color {
+    return Color(android.graphics.Color.parseColor(this))
+}
