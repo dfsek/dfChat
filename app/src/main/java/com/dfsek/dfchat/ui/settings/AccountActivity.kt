@@ -25,7 +25,7 @@ import coil.compose.AsyncImage
 import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
 import com.dfsek.dfchat.DfChat
-import com.dfsek.dfchat.SessionHolder
+import com.dfsek.dfchat.AppState
 import com.dfsek.dfchat.state.UserState
 import com.dfsek.dfchat.ui.rooms.DirectMessagesActivity
 import com.dfsek.dfchat.util.SSO_REDIRECT_URL
@@ -47,7 +47,7 @@ class AccountActivity : AppCompatActivity() {
             CoroutineScope(Dispatchers.Default).launch {
                 try {
                     Log.i("Session", "Signing in to matrix account")
-                    SessionHolder.currentSession = DfChat.getMatrix(this@AccountActivity)
+                    AppState.session = DfChat.getMatrix(this@AccountActivity)
                         .authenticationService()
                         .getLoginWizard()
                         .loginWithToken(token)
@@ -62,10 +62,10 @@ class AccountActivity : AppCompatActivity() {
             }
         }
         setContent {
-            MaterialTheme(colors = darkColors()) {
+            MaterialTheme(colors = AppState.themeColors) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     Column {
-                        val client = SessionHolder.currentSession
+                        val client = AppState.session
                         if (client == null) {
                             LoginForm()
                         } else {

@@ -25,9 +25,8 @@ import androidx.lifecycle.LiveData
 import coil.compose.AsyncImage
 import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
-import com.dfsek.dfchat.SessionHolder
+import com.dfsek.dfchat.AppState
 import com.dfsek.dfchat.ui.settings.SettingsActivity
-import com.google.android.material.color.MaterialColors
 import com.halilibo.richtext.markdown.Markdown
 import com.halilibo.richtext.ui.RichText
 import com.halilibo.richtext.ui.RichTextThemeIntegration
@@ -105,11 +104,13 @@ fun <E> List<E>.update(value: E, index: Int): List<E> {
 }
 
 fun getAvatarUrl(avatarUrl: String?, thumbnailX: Int = 32, thumbnailY: Int = thumbnailX): String? {
-    return SessionHolder.currentSession?.contentUrlResolver()
+    return AppState.session?.contentUrlResolver()
         ?.resolveThumbnail(avatarUrl, thumbnailX, thumbnailY, ContentUrlResolver.ThumbnailMethod.SCALE)
 }
 
 internal const val SSO_REDIRECT_URL = "dfchat://login"
+internal const val THEME_PREFS = "theme"
+internal const val THEME_KEY = "theme"
 
 fun TimelineEvent.getPreviewText(): String {
     val fullText = when (root.getClearType()) {
@@ -146,7 +147,7 @@ private fun TimelineEvent.RenderMessageEvent(modifier: Modifier = Modifier) {
             var imageUrl by remember { mutableStateOf<String?>(null) }
 
             LaunchedEffect(imageContent) {
-                imageUrl = SessionHolder.currentSession!!.contentUrlResolver().resolveFullSize(imageContent.url)
+                imageUrl = AppState.session!!.contentUrlResolver().resolveFullSize(imageContent.url)
             }
 
             imageUrl?.let {

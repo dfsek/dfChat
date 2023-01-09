@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import com.dfsek.dfchat.SessionHolder
+import com.dfsek.dfchat.AppState
 import com.dfsek.dfchat.state.VerificationState
 import com.dfsek.dfchat.util.DynamicContent
 import org.matrix.android.sdk.api.session.crypto.model.DeviceInfo
@@ -20,8 +20,8 @@ class VerificationActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MaterialTheme(colors = darkColors()) {
-                SessionHolder.currentSession?.let { session ->
+            MaterialTheme(colors = AppState.themeColors) {
+                AppState.session?.let { session ->
                     val state = VerificationState(session)
                     Surface(modifier = Modifier.fillMaxSize()) {
                         DynamicContent(state.devices) {
@@ -40,7 +40,7 @@ class VerificationActivity : AppCompatActivity() {
 
     override fun finish() {
         super.finish()
-        SessionHolder.currentSession?.let { session ->
+        AppState.session?.let { session ->
             listener?.let { session.cryptoService().verificationService().removeListener(it) }
         }
     }
@@ -95,7 +95,7 @@ class VerificationActivity : AppCompatActivity() {
             Button(onClick = {
                 pendingStart = null
                 request.transactionId?.let { transactionId ->
-                    SessionHolder.currentSession!!
+                    AppState.session!!
                         .cryptoService()
                         .verificationService()
                         .readyPendingVerification(

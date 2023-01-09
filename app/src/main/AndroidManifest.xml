@@ -75,6 +75,14 @@
                     android:value=""/>
         </activity>
         <activity
+                android:name=".ui.settings.ThemeActivity"
+                android:exported="true"
+                android:theme="@style/Theme.DfChat.NoActionBar">
+            <meta-data
+                    android:name="android.app.lib_name"
+                    android:value=""/>
+        </activity>
+        <activity
                 android:name=".login.SSORedirectRouterActivity"
                 android:exported="true"
                 android:theme="@style/Theme.DfChat.NoActionBar">

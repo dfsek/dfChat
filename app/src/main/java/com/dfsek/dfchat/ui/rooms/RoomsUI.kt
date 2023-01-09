@@ -11,7 +11,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -23,9 +22,8 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
-import com.dfsek.dfchat.SessionHolder
+import com.dfsek.dfchat.AppState
 import com.dfsek.dfchat.ui.RoomActivity
-import com.dfsek.dfchat.util.SettingsDropdown
 import com.dfsek.dfchat.util.getAvatarUrl
 import com.dfsek.dfchat.util.getPreviewText
 import org.matrix.android.sdk.api.session.room.RoomSummaryQueryParams
@@ -75,7 +73,7 @@ fun Activity.RoomList(
     queryParams: RoomSummaryQueryParams,
     filter: (List<RoomSummary>) -> List<RoomSummary>
 ) {
-    SessionHolder.currentSession?.let { session ->
+    AppState.session?.let { session ->
         val lifecycleOwner = LocalLifecycleOwner.current
         var rooms: List<RoomSummary> by remember { mutableStateOf(emptyList()) }
         LaunchedEffect(session) {

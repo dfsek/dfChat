@@ -12,6 +12,7 @@ import androidx.compose.material.darkColors
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import com.dfsek.dfchat.AppState
 import com.dfsek.dfchat.ui.TopBar
 import com.dfsek.dfchat.ui.SelectionUI
 import org.matrix.android.sdk.api.session.room.RoomSummaryQueryParams
@@ -20,7 +21,7 @@ class DirectMessagesActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MaterialTheme(colors = darkColors()) {
+            MaterialTheme(colors = AppState.themeColors) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     val selectionUIOpen = remember { mutableStateOf(false) }
                     Column {

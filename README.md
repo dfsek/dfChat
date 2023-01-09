@@ -7,7 +7,8 @@ Android.
 
 TODO:
 
- - [x] Sign in
+ - [x] SSO sign in
+ - [ ] Username/password sign in
  - [x] Persist login
  - [x] Display all joined rooms
  - [x] Room images
@@ -17,11 +18,10 @@ TODO:
  - [ ] Send images
  - [ ] Load messages upon scrolling up
  - [x] Markdown formatting
- - [ ] Message editing
- - [ ] Overwrite edited events
  - [ ] Remove redacted events from local timeline
  - [x] Message redacting
  - [x] Message replies
+ - [ ] Message editing
  - [ ] Copy message text
  - [ ] Select message text
  - [x] Cross Signing
@@ -32,7 +32,8 @@ TODO:
  - [ ] Join space rooms
  - [ ] Join rooms from link
  - [ ] Voice calls
- - [ ] System theme support
+ - [x] System theme support
+ - [ ] Custom theme support
  - [ ] Notifications
 
 Possible features:
@@ -40,3 +41,7 @@ Possible features:
  - [ ] Retroactive replies
  - [ ] Manual read receipts
  - [ ] Mark room as unread
+
+Potential names:
+ * Feldspar
+ * Peridot

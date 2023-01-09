@@ -16,13 +16,14 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.darkColors
 import androidx.compose.ui.Modifier
+import com.dfsek.dfchat.AppState
 import kotlin.reflect.KClass
 
 class SettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MaterialTheme(colors = darkColors()) {
+            MaterialTheme(colors = AppState.themeColors) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     Settings()
                 }
@@ -47,7 +48,6 @@ class SettingsActivity : AppCompatActivity() {
     fun SettingsItem(text: String, activity: KClass<out Activity>) {
         Row(modifier = Modifier.clickable {
             startActivity(Intent(applicationContext, activity.java))
-            finish()
         }) {
             Text(text, fontSize = 30.sp)
         }

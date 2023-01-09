@@ -10,10 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
@@ -28,7 +25,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
-import com.dfsek.dfchat.SessionHolder
+import com.dfsek.dfchat.AppState
 import com.dfsek.dfchat.ui.rooms.DirectMessagesActivity
 import com.dfsek.dfchat.ui.rooms.GroupMessagesActivity
 import com.dfsek.dfchat.util.SettingsDropdown
@@ -50,10 +47,10 @@ fun Activity.RootSpacesSelection(modifier: Modifier = Modifier, isOpen: MutableS
         .background(MaterialTheme.colors.background)
         .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {}) {
         var rootSpaces by remember { mutableStateOf<List<Room>>(emptyList()) }
-        val session = remember { SessionHolder.currentSession as Session }
+        val session = remember { AppState.session as Session }
         val spaceStack = remember { Stack<Space>() }
         var currentRooms by remember { mutableStateOf<List<Room>?>(null) }
-        LaunchedEffect(SessionHolder.currentSession) {
+        LaunchedEffect(AppState.session) {
             rootSpaces = session
                 .spaceService()
                 .getRootSpaceSummaries()
@@ -86,7 +83,7 @@ fun Activity.RootSpacesSelection(modifier: Modifier = Modifier, isOpen: MutableS
                 )
             }
         }
-        val avatarSize = 32
+        val avatarSize = 36
         LazyColumn {
             if(spaceStack.empty()) {
                 item {

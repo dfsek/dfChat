@@ -5,7 +5,6 @@ import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
-import android.view.WindowManager
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.*
@@ -26,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -41,7 +39,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
-import com.dfsek.dfchat.SessionHolder
+import com.dfsek.dfchat.AppState
 import com.dfsek.dfchat.state.ChatRoomState
 import com.dfsek.dfchat.util.RenderMessage
 import com.dfsek.dfchat.util.getPreviewText
@@ -60,10 +58,10 @@ class RoomActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            MaterialTheme(colors = darkColors()) {
+            MaterialTheme(colors = AppState.themeColors) {
                 Surface {
                     intent.getStringExtra("room")?.let { roomId ->
-                        SessionHolder.currentSession?.let { session ->
+                        AppState.session?.let { session ->
                             session.getRoom(roomId)?.let {
                                 val state = remember {
                                     ChatRoomState(
@@ -287,7 +285,7 @@ class RoomActivity : AppCompatActivity() {
                         val imageContent =
                             event.root.getClearContent().toModel<MessageImageContent>() ?: return@combinedClickable
                         scope.launch {
-                            chatRoomState.selectedImageUrl = SessionHolder.currentSession!!.contentUrlResolver()
+                            chatRoomState.selectedImageUrl = AppState.session!!.contentUrlResolver()
                                 .resolveFullSize(imageContent.url)
                         }
                     }
