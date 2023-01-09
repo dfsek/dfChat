@@ -28,7 +28,7 @@ import coil.request.ImageRequest
 import com.dfsek.dfchat.AppState
 import com.dfsek.dfchat.ui.rooms.DirectMessagesActivity
 import com.dfsek.dfchat.ui.rooms.GroupMessagesActivity
-import com.dfsek.dfchat.util.SettingsDropdown
+import com.dfsek.dfchat.ui.settings.SettingsDropdown
 import com.dfsek.dfchat.util.getAvatarUrl
 import com.dfsek.dfchat.util.getPreviewText
 import org.matrix.android.sdk.api.query.SpaceFilter
