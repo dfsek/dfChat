@@ -60,9 +60,6 @@ class ThemeActivity : AppCompatActivity() {
         }
 
         LazyColumn {
-            item {
-                Text("Theme", fontSize = 18.sp)
-            }
             items(themes) {
                 Row(modifier = Modifier
                     .fillMaxWidth()
@@ -143,7 +140,7 @@ class ThemeActivity : AppCompatActivity() {
                     }
                     theme = theme.copy(isLight = it)
                 })
-                Text("Dark Theme")
+                Text("Dark Theme", modifier = Modifier.align(Alignment.CenterVertically))
             }
 
         }
@@ -153,8 +150,8 @@ class ThemeActivity : AppCompatActivity() {
         item {
             var error by remember { mutableStateOf("") }
             val text = remember { mutableStateOf(color.toHexString()) }
-            Column {
-                Text(text = name)
+            Column(modifier = Modifier) {
+                Text(text = name, fontSize = 18.sp)
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Box(
                         modifier = Modifier.size(36.dp).clip(CircleShape).background(color)
@@ -176,6 +173,7 @@ class ThemeActivity : AppCompatActivity() {
                     })
                 }
                 Text(text = error, color = MaterialTheme.colors.error)
+                Divider()
             }
         }
     }

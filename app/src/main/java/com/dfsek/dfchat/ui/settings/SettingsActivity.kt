@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.dfsek.dfchat.AppState
 import kotlin.reflect.KClass
 
@@ -35,24 +36,33 @@ class SettingsActivity : AppCompatActivity() {
             SettingsTopBar("Settings")
             LazyColumn(modifier = Modifier.fillMaxWidth()) {
                 item {
-                    SettingsItem("Account", AccountActivity::class)
+                    SettingsItem("General", "General UI configuration.", GeneralActivity::class)
                 }
                 item {
-                    SettingsItem("Verification", VerificationActivity::class)
+                    SettingsItem("Account", "Sign-in and log out.", AccountActivity::class)
                 }
                 item {
-                    SettingsItem("Theme", ThemeActivity::class)
+                    SettingsItem("Verification", "Verify this session and view other sessions.", VerificationActivity::class)
+                }
+                item {
+                    SettingsItem("Theme", "Adjust theme preferences.", ThemeActivity::class)
                 }
             }
         }
     }
 
     @Composable
-    fun SettingsItem(text: String, activity: KClass<out Activity>) {
-        Row(modifier = Modifier.clickable {
-            startActivity(Intent(applicationContext, activity.java))
-        }.fillMaxWidth()) {
-            Text(text, fontSize = 30.sp)
+    fun SettingsItem(text: String, description: String, activity: KClass<out Activity>) {
+        Column {
+            Row(modifier = Modifier.clickable {
+                startActivity(Intent(applicationContext, activity.java))
+            }.fillMaxWidth()) {
+                Column {
+                    Text(text, fontSize = 18.sp, modifier = Modifier.padding(6.dp))
+                    Text(description, fontSize = 12.sp, modifier = Modifier.padding(6.dp))
+                }
+            }
+            Divider()
         }
     }
 }

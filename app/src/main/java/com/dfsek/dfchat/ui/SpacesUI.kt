@@ -83,7 +83,7 @@ fun Activity.RootSpacesSelection(modifier: Modifier = Modifier, isOpen: MutableS
                 )
             }
         }
-        val avatarSize = 36
+        val avatarSize = AppState.Preferences.spacesAvatarSize
         LazyColumn {
             if(spaceStack.empty()) {
                 item {

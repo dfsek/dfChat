@@ -7,6 +7,7 @@ import android.util.Log
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.darkColors
 import androidx.compose.material.lightColors
+import com.dfsek.dfchat.AppState.Preferences.updatePrefs
 import com.dfsek.dfchat.AppState.updateTheme
 import com.dfsek.dfchat.util.RoomDisplayNameFallbackProviderImpl
 import com.dfsek.dfchat.util.THEME_KEY
@@ -22,6 +23,7 @@ class DfChat : Application() {
         createMatrix()
         val lastSession = matrix.authenticationService().getLastAuthenticatedSession()
         updateTheme()
+        updatePrefs()
         if (lastSession != null) {
             Log.i("Session", "Restoring previous session.")
             AppState.session = lastSession

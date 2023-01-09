@@ -55,10 +55,10 @@ fun Activity.RoomEntry(room: RoomSummary) {
                     .build(),
                 contentScale = ContentScale.Fit,
                 contentDescription = null,
-                modifier = Modifier.size(64.dp).clip(CircleShape)
+                modifier = Modifier.size(AppState.Preferences.dmAvatarSize.dp).clip(CircleShape)
             )
         } ?: Box(
-            modifier = Modifier.size(64.dp).clip(CircleShape).background(Color.Cyan)
+            modifier = Modifier.size(AppState.Preferences.dmAvatarSize.dp).clip(CircleShape).background(Color.Cyan)
         )
 
         Column {

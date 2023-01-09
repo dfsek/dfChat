@@ -58,6 +58,15 @@
                     android:value=""/>
         </activity>
         <activity
+                android:name=".ui.settings.GeneralActivity"
+                android:exported="true"
+                android:theme="@style/Theme.DfChat.NoActionBar">
+
+            <meta-data
+                    android:name="android.app.lib_name"
+                    android:value=""/>
+        </activity>
+        <activity
                 android:name=".ui.settings.VerificationActivity"
                 android:exported="true"
                 android:theme="@style/Theme.DfChat.NoActionBar">

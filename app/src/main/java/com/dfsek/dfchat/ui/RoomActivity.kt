@@ -277,7 +277,7 @@ class RoomActivity : AppCompatActivity() {
                     .build(),
                 contentScale = ContentScale.Fit,
                 contentDescription = null,
-                modifier = Modifier.size(48.dp).clip(CircleShape)
+                modifier = Modifier.size(AppState.Preferences.roomAvatarSize.dp).clip(CircleShape)
             )
 
 

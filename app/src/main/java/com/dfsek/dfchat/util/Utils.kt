@@ -40,8 +40,11 @@ fun getAvatarUrl(avatarUrl: String?, thumbnailX: Int = 32, thumbnailY: Int = thu
 }
 
 internal const val SSO_REDIRECT_URL = "dfchat://login"
+
 internal const val THEME_PREFS = "theme"
 internal const val THEME_KEY = "theme"
+
+internal const val GENERAL_PREFS = "general"
 
 @Composable
 fun <T> DynamicContent(data: LiveData<T>, consume: @Composable (T) -> Unit) {

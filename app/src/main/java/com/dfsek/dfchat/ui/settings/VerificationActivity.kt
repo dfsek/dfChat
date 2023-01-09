@@ -6,9 +6,11 @@ import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.dfsek.dfchat.AppState
 import com.dfsek.dfchat.state.VerificationState
 import com.dfsek.dfchat.util.DynamicContent
@@ -35,7 +37,6 @@ class VerificationActivity : AppCompatActivity() {
                         }
                     }
                 }
-
             }
         }
     }
@@ -49,10 +50,11 @@ class VerificationActivity : AppCompatActivity() {
 
     @Composable
     fun Device(info: DeviceInfo) {
-        Column {
+        Column(modifier = Modifier.padding(6.dp)) {
             info.deviceId?.let { Text(it) }
             info.displayName?.let { Text(it) }
             info.lastSeenIp?.let { Text("Last seen st $it") }
+            Divider()
         }
     }
 
