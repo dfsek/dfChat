@@ -44,6 +44,7 @@ import coil.request.ImageRequest
 import com.dfsek.dfchat.AppState
 import com.dfsek.dfchat.state.ChatRoomState
 import com.dfsek.dfchat.util.RenderMessage
+import com.dfsek.dfchat.util.TimelineEventWrapper
 import com.dfsek.dfchat.util.getPreviewText
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -263,7 +264,7 @@ class RoomActivity : AppCompatActivity() {
         state: ChatRoomState,
         modifier: Modifier = Modifier,
         senderInfo: SenderInfo,
-        timelineEvents: List<TimelineEvent>
+        timelineEvents: List<TimelineEventWrapper>
     ) {
         Row(modifier = modifier) {
 
@@ -293,10 +294,10 @@ class RoomActivity : AppCompatActivity() {
 
     @OptIn(ExperimentalFoundationApi::class)
     @Composable
-    fun Message(event: TimelineEvent) {
+    fun Message(event: TimelineEventWrapper) {
         val menuExpanded = remember { mutableStateOf(false) }
         val deleteDialogOpen = remember { mutableStateOf(false) }
-        val messageContent = remember { event.root.getClearContent().toModel<MessageContent>() }
+        val messageContent = remember { event.event.root.getClearContent().toModel<MessageContent>() }
         val scope = rememberCoroutineScope()
         Row(modifier = Modifier.combinedClickable(
             onLongClick = {
@@ -306,7 +307,7 @@ class RoomActivity : AppCompatActivity() {
                 messageContent?.let {
                     if (it.msgType == "m.image") {
                         val imageContent =
-                            event.root.getClearContent().toModel<MessageImageContent>() ?: return@combinedClickable
+                            event.event.root.getClearContent().toModel<MessageImageContent>() ?: return@combinedClickable
                         scope.launch {
                             chatRoomState.selectedImageUrl = AppState.session!!.contentUrlResolver()
                                 .resolveFullSize(imageContent.url)
@@ -316,10 +317,10 @@ class RoomActivity : AppCompatActivity() {
             }
         ).fillMaxWidth()) {
             if (deleteDialogOpen.value) {
-                DeleteDialog(event, deleteDialogOpen)
+                DeleteDialog(event.event, deleteDialogOpen)
             }
-            MessageDropdown(event, menuExpanded, deleteDialogOpen)
-            event.RenderMessage()
+            MessageDropdown(event.event, menuExpanded, deleteDialogOpen)
+            event.RenderEvent(modifier = Modifier)
         }
     }
 

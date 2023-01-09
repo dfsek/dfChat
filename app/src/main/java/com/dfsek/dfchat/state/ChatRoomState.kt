@@ -3,6 +3,7 @@ package com.dfsek.dfchat.state
 import android.util.Log
 import androidx.compose.runtime.*
 import androidx.lifecycle.LifecycleOwner
+import com.dfsek.dfchat.util.TimelineEventWrapper
 import com.dfsek.dfchat.util.getAvatarUrl
 import org.matrix.android.sdk.api.session.Session
 import org.matrix.android.sdk.api.session.room.Room
@@ -10,7 +11,6 @@ import org.matrix.android.sdk.api.session.room.sender.SenderInfo
 import org.matrix.android.sdk.api.session.room.timeline.Timeline
 import org.matrix.android.sdk.api.session.room.timeline.TimelineEvent
 import org.matrix.android.sdk.api.session.room.timeline.TimelineSettings
-import org.matrix.android.sdk.api.util.toMatrixItem
 
 class ChatRoomState(
     val room: Room,
@@ -44,19 +44,35 @@ class ChatRoomState(
         timeline = null
     }
 
-    fun splitEvents(): List<Pair<SenderInfo, List<TimelineEvent>>> {
-        val list = mutableListOf<Pair<SenderInfo, MutableList<TimelineEvent>>>()
+    fun splitEvents(): List<Pair<SenderInfo, List<TimelineEventWrapper>>> {
+        val list = mutableListOf<Pair<SenderInfo, MutableList<TimelineEventWrapper>>>()
+
+        val redactionEventIDs = mutableSetOf<String>()
+        val redactedEventIDs = mutableSetOf<String>()
+
+        val redactedBy = mutableMapOf<String, TimelineEvent>()
+
+        timelineEvents.forEach {
+            if (it.root.getClearType() == "m.room.redaction") {
+                redactedEventIDs.add(it.root.redacts!!)
+                redactionEventIDs.add(it.eventId)
+                redactedBy[it.root.redacts!!] = it
+            }
+        }
+
+        fun createWrapper(event: TimelineEvent): TimelineEventWrapper =
+            if (redactedEventIDs.contains(event.eventId)) TimelineEventWrapper.Redacted(event, redactedBy[event.eventId]!!)
+            else TimelineEventWrapper.Default(event)
 
         var lastUserId: SenderInfo? = null
-        timelineEvents.forEach {
+        timelineEvents.filter { !redactionEventIDs.contains(it.eventId) }.forEach {
             if (lastUserId != null && it.senderInfo == lastUserId) {
-                list.last().second.add(it)
+                list.last().second.add(createWrapper(it))
             } else {
-                list.add(Pair(it.senderInfo, mutableListOf(it)))
+                list.add(Pair(it.senderInfo, mutableListOf(createWrapper(it))))
             }
             lastUserId = it.senderInfo
         }
-
 
         return list.reversed()
     }

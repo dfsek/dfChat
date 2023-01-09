@@ -26,9 +26,9 @@ import java.io.File
 @Composable
 fun TimelineEvent.RenderMessage(modifier: Modifier = Modifier): Unit = when (root.getClearType()) {
     EventType.MESSAGE -> RenderMessageEvent(modifier = modifier)
-    EventType.ENCRYPTED -> Text("Encrypted message (haven't received keys!)", color = Color.Red)
+    EventType.ENCRYPTED -> Text("Encrypted message (haven't received keys!)", color = MaterialTheme.colors.error)
 
-    else -> Text("dfChat unimplemented event ${root.getClearType()}", color = Color.Red)
+    else -> Text("dfChat unimplemented event ${root.getClearType()}", color = MaterialTheme.colors.error)
 }
 
 @Composable
