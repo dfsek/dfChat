@@ -90,4 +90,8 @@ class ChatRoomState(
             .getUser(id)
             ?.avatarUrl?.let { getAvatarUrl(it) }
     }
+
+    fun loadMore() {
+        timeline?.paginate(Timeline.Direction.BACKWARDS, 30)
+    }
 }

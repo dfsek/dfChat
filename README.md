@@ -17,7 +17,7 @@ TODO:
  - [x] Preview images
  - [ ] Download images
  - [ ] Send images
- - [ ] Load messages upon scrolling up
+ - [x] Load messages upon scrolling up
  - [x] Markdown formatting
  - [ ] Remove redacted events from local timeline
  - [x] Message redacting

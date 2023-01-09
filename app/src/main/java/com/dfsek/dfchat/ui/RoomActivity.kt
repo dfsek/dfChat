@@ -45,6 +45,7 @@ import com.dfsek.dfchat.AppState
 import com.dfsek.dfchat.state.ChatRoomState
 import com.dfsek.dfchat.util.RenderMessage
 import com.dfsek.dfchat.util.getPreviewText
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import org.matrix.android.sdk.api.session.events.model.toModel
 import org.matrix.android.sdk.api.session.getRoom
@@ -155,6 +156,26 @@ class RoomActivity : AppCompatActivity() {
     ) {
         val scrollState = rememberLazyListState()
         val scope = rememberCoroutineScope()
+
+        val loadMore = remember {
+            derivedStateOf {
+                val layoutInfo = scrollState.layoutInfo
+                val lastVisibleItemIndex = (layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0) + 1
+                lastVisibleItemIndex > (layoutInfo.totalItemsCount - 3)
+            }
+        }
+
+        LaunchedEffect(loadMore) {
+            snapshotFlow {
+                loadMore.value
+            }
+                .distinctUntilChanged()
+                .collect {
+                    Log.d("Message Fetching", "reached top of list. Loading more messages...")
+                    roomState.loadMore()
+                }
+        }
+
         Surface {
             Box(modifier = Modifier.fillMaxSize()) {
                 Column(modifier = Modifier.fillMaxSize()) {
