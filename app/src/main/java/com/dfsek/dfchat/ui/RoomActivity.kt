@@ -271,13 +271,13 @@ class RoomActivity : AppCompatActivity() {
     @OptIn(ExperimentalFoundationApi::class)
     @Composable
     fun Message(event: TimelineEvent) {
-        var expanded by remember { mutableStateOf(false) }
-        var deleteDialogOpen by remember { mutableStateOf(false) }
+        val menuExpanded = remember { mutableStateOf(false) }
+        val deleteDialogOpen = remember { mutableStateOf(false) }
         val messageContent = remember { event.root.getClearContent().toModel<MessageContent>() }
         val scope = rememberCoroutineScope()
         Row(modifier = Modifier.combinedClickable(
             onLongClick = {
-                expanded = true
+                menuExpanded.value = true
             },
             onClick = {
                 messageContent?.let {
@@ -292,64 +292,74 @@ class RoomActivity : AppCompatActivity() {
                 }
             }
         ).fillMaxWidth()) {
-            if (deleteDialogOpen) {
-                AlertDialog(
-                    onDismissRequest = {
-                        deleteDialogOpen = false
-                    },
-                    title = {
-                        Text("Redaction Confirmation")
-                    },
-                    text = {
-                        Column {
-                            Text("Are you sure you want to redact this event?")
-                            event.RenderMessage()
-                        }
-                    },
-                    confirmButton = {
-                        Button(onClick = {
-                            chatRoomState.redact(event)
-                            deleteDialogOpen = false
-                        }) {
-                            Text("Confirm")
-                        }
-                    },
-                    dismissButton = {
-                        Button(onClick = {
-                            deleteDialogOpen = false
-                        }) {
-                            Text("Cancel")
-                        }
-                    }
-                )
+            if (deleteDialogOpen.value) {
+                DeleteDialog(event, deleteDialogOpen)
             }
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = {
-                    expanded = false
-                }
-            ) {
-                DropdownMenuItem(
-                    onClick = {
-                        chatRoomState.replyTo = event
-                        expanded = false
-                    },
-                    enabled = true
-                ) {
-                    Text("Reply")
-                }
-                DropdownMenuItem(
-                    onClick = {
-                        expanded = false
-                        deleteDialogOpen = true
-                    },
-                    enabled = true
-                ) {
-                    Text("Redact")
-                }
-            }
+            MessageDropdown(event, menuExpanded, deleteDialogOpen)
             event.RenderMessage()
         }
+    }
+
+    @Composable
+    fun MessageDropdown(event: TimelineEvent, expanded: MutableState<Boolean>, deleteDialogOpen: MutableState<Boolean>) {
+        DropdownMenu(
+            expanded = expanded.value,
+            onDismissRequest = {
+                expanded.value = false
+            }
+        ) {
+            DropdownMenuItem(
+                onClick = {
+                    chatRoomState.replyTo = event
+                    expanded.value = false
+                },
+                enabled = true
+            ) {
+                Text("Reply")
+            }
+            DropdownMenuItem(
+                onClick = {
+                    expanded.value = false
+                    deleteDialogOpen.value = true
+                },
+                enabled = true
+            ) {
+                Text("Redact")
+            }
+        }
+    }
+
+    @Composable
+    fun DeleteDialog(event: TimelineEvent, deleteDialogOpen: MutableState<Boolean>) {
+        AlertDialog(
+            onDismissRequest = {
+                deleteDialogOpen.value = false
+            },
+            title = {
+                Text("Redaction Confirmation")
+            },
+            text = {
+                Column {
+                    Text("Are you sure you want to redact this event?")
+                    event.RenderMessage()
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    chatRoomState.redact(event)
+                    deleteDialogOpen.value = false
+                }) {
+                    Text("Confirm")
+                }
+            },
+            dismissButton = {
+                Button(onClick = {
+                    deleteDialogOpen.value = false
+                }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
     override fun finish() {
