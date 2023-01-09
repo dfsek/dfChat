@@ -2,10 +2,14 @@ package com.dfsek.dfchat.ui
 
 import android.app.DownloadManager
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.*
@@ -17,8 +21,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,14 +44,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
 import com.dfsek.dfchat.AppState
 import com.dfsek.dfchat.state.ChatRoomState
+import com.dfsek.dfchat.util.CameraFileProvider
 import com.dfsek.dfchat.util.RenderMessage
 import com.dfsek.dfchat.util.TimelineEventWrapper
 import com.dfsek.dfchat.util.getPreviewText
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import org.matrix.android.sdk.api.session.events.model.toModel
@@ -55,6 +64,7 @@ import org.matrix.android.sdk.api.session.room.model.message.MessageImageContent
 import org.matrix.android.sdk.api.session.room.sender.SenderInfo
 import org.matrix.android.sdk.api.session.room.timeline.TimelineEvent
 import kotlin.math.roundToInt
+
 
 class RoomActivity : AppCompatActivity() {
     private lateinit var chatRoomState: ChatRoomState
@@ -210,6 +220,10 @@ class RoomActivity : AppCompatActivity() {
         modifier: Modifier = Modifier,
     ) {
         var input by remember { mutableStateOf("") }
+        val imageUi = remember { mutableStateOf(false) }
+        if(imageUi.value) {
+            ImageDialog(imageUi)
+        }
 
         Surface {
             Column {
@@ -222,6 +236,15 @@ class RoomActivity : AppCompatActivity() {
                     )
                 }
                 Row(modifier = modifier) {
+
+                    IconButton(onClick = {
+                        imageUi.value = true
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Upload"
+                        )
+                    }
                     TextField(value = input, onValueChange = {
                         input = it
                     }, modifier = Modifier.weight(1f))
@@ -361,6 +384,64 @@ class RoomActivity : AppCompatActivity() {
                 Text("Copy Text")
             }
         }
+    }
+
+    @Composable
+    fun ImageDialog(imageDialogOpen: MutableState<Boolean>) {
+        var hasImage by remember { mutableStateOf(false) }
+        var imageUri by remember { mutableStateOf<Uri?>(null) }
+        val cameraLauncher =
+            rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+                hasImage = success
+            }
+        val imagePicker = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.GetContent(),
+            onResult = { uri ->
+                hasImage = uri != null
+                imageUri = uri
+            }
+        )
+        LaunchedEffect(hasImage) {
+            snapshotFlow { hasImage }
+                .distinctUntilChanged()
+                .collect {
+                    if(it) {
+                        imageUri?.let {
+                            chatRoomState.uploadImage(it)
+                            imageUri = null
+                            hasImage = false
+                            imageDialogOpen.value = false
+                        }
+                    }
+                }
+        }
+
+        Dialog(
+            onDismissRequest = {
+                imageDialogOpen.value = false
+            },
+            content = {
+                Surface(shape = MaterialTheme.shapes.medium) {
+                    Column(modifier = Modifier.padding(24.dp)) {
+                        Text("Upload Image", fontSize = 18.sp, modifier = Modifier.padding(6.dp))
+                        Button(onClick = {
+                            imagePicker.launch("image/*")
+                        }) {
+                            Text("Choose from Gallery")
+                        }
+                        Divider()
+                        Text("Use Camera", fontSize = 18.sp, modifier = Modifier.padding(6.dp))
+                        Button(onClick = {
+                            val uri = CameraFileProvider.getImageUri(this@RoomActivity)
+                            imageUri = uri
+                            cameraLauncher.launch(uri)
+                        }) {
+                            Text("Take picture with Camera")
+                        }
+                    }
+                }
+            }
+        )
     }
 
     @Composable

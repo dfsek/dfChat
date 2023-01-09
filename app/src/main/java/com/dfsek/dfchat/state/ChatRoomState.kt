@@ -1,11 +1,13 @@
 package com.dfsek.dfchat.state
 
+import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.*
 import androidx.lifecycle.LifecycleOwner
 import com.dfsek.dfchat.util.TimelineEventWrapper
 import com.dfsek.dfchat.util.getAvatarUrl
 import org.matrix.android.sdk.api.session.Session
+import org.matrix.android.sdk.api.session.content.ContentAttachmentData
 import org.matrix.android.sdk.api.session.room.Room
 import org.matrix.android.sdk.api.session.room.sender.SenderInfo
 import org.matrix.android.sdk.api.session.room.timeline.Timeline
@@ -94,6 +96,14 @@ class ChatRoomState(
                 .replyToMessage(eventReplied = it, replyText = message, autoMarkdown = true)
         } ?: room.sendService()
             .sendTextMessage(text = message, autoMarkdown = true)
+    }
+
+    fun uploadImage(uri: Uri) {
+        room.sendService().sendMedia(
+            attachment = ContentAttachmentData(queryUri = uri, mimeType = "image/png", type = ContentAttachmentData.Type.IMAGE),
+            compressBeforeSending = true,
+            roomIds = setOf(room.roomId)
+        )
     }
 
     fun redact(event: TimelineEvent) {
