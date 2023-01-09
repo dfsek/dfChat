@@ -29,8 +29,10 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
@@ -302,6 +304,7 @@ class RoomActivity : AppCompatActivity() {
 
     @Composable
     fun MessageDropdown(event: TimelineEvent, expanded: MutableState<Boolean>, deleteDialogOpen: MutableState<Boolean>) {
+        val clipboardManager = LocalClipboardManager.current
         DropdownMenu(
             expanded = expanded.value,
             onDismissRequest = {
@@ -325,6 +328,15 @@ class RoomActivity : AppCompatActivity() {
                 enabled = true
             ) {
                 Text("Redact")
+            }
+            DropdownMenuItem(
+                onClick = {
+                    expanded.value = false
+                    clipboardManager.setText(AnnotatedString(event.getPreviewText(false)))
+                },
+                enabled = true
+            ) {
+                Text("Copy Text")
             }
         }
     }

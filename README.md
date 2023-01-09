@@ -22,7 +22,7 @@ TODO:
  - [x] Message redacting
  - [x] Message replies
  - [ ] Message editing
- - [ ] Copy message text
+ - [x] Copy message text
  - [ ] Select message text
  - [x] Cross Signing
  - [x] Encryption

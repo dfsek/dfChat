@@ -33,12 +33,13 @@ fun TimelineEvent.RenderMessage(modifier: Modifier = Modifier): Unit = when (roo
 @Composable
 private fun TimelineEvent.RenderMessageEvent(modifier: Modifier = Modifier) {
     val messageContent = root.getClearContent().toModel<MessageContent>() ?: return
-    when(messageContent.msgType) {
+    when (messageContent.msgType) {
         "m.text" -> RichTextThemeIntegration(contentColor = { MaterialTheme.colors.onBackground }) {
             RichText(modifier = modifier) {
                 Markdown(content = formatMessage(this@RenderMessageEvent))
             }
         }
+
         "m.image" -> {
             val imageContent = root.getClearContent().toModel<MessageImageContent>() ?: return
             var imageUrl by remember { mutableStateOf<String?>(null) }
@@ -60,21 +61,23 @@ private fun TimelineEvent.RenderMessageEvent(modifier: Modifier = Modifier) {
                 )
             } ?: Text("Rendering image...")
         }
+
         else -> Text(formatMessage(this))
     }
 }
 
-fun TimelineEvent.getPreviewText(): String {
+fun TimelineEvent.getPreviewText(cut: Boolean = true): String {
     val fullText = when (root.getClearType()) {
         EventType.MESSAGE -> formatMessage(this)
         EventType.ENCRYPTED -> "Encrypted message (haven't received keys!)"
 
         else -> "dfChat unimplemented event ${root.getClearType()}"
     }
+    if (!cut) return fullText
 
     val beforeNewline = fullText.substringBefore("\n")
 
-    return if(beforeNewline.length <= 50) beforeNewline else (beforeNewline.substring(0, 51).trim() + "...")
+    return if (beforeNewline.length <= 50) beforeNewline else (beforeNewline.substring(0, 51).trim() + "...")
 }
 
 private fun formatMessage(timelineEvent: TimelineEvent): String {
