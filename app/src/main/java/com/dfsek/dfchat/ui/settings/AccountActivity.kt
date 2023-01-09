@@ -65,6 +65,7 @@ class AccountActivity : AppCompatActivity() {
             MaterialTheme(colors = AppState.themeColors) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     Column {
+                        SettingsTopBar("Account")
                         val client = AppState.session
                         if (client == null) {
                             LoginForm()

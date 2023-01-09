@@ -30,7 +30,10 @@ class ThemeActivity : AppCompatActivity() {
 
             MaterialTheme(colors = AppState.themeColors) {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    ThemeSelector(preferences)
+                    Column {
+                        SettingsTopBar("Account")
+                        ThemeSelector(preferences)
+                    }
                 }
             }
         }

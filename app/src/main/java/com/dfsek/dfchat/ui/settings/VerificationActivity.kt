@@ -26,6 +26,7 @@ class VerificationActivity : AppCompatActivity() {
                     Surface(modifier = Modifier.fillMaxSize()) {
                         DynamicContent(state.devices) {
                             Column {
+                                SettingsTopBar("Account")
                                 Verification(state)
                                 it.forEach {
                                     Device(it)
