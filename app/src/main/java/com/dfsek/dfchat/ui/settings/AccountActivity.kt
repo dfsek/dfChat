@@ -96,9 +96,15 @@ class AccountActivity : AppCompatActivity() {
 
             Text(userState.getUsername())
 
+            val scope = rememberCoroutineScope()
+
             Button(onClick = {
-                userState.logout()
-                finish()
+                scope.launch {
+                    userState.logout()
+                    runOnUiThread {
+                        finish()
+                    }
+                }
             }) {
                 Text("Log Out")
             }

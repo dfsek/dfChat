@@ -12,7 +12,7 @@ TODO:
  - [x] Render message images
  - [x] Render encrypted message images
  - [x] Preview images
- - [ ] Download images
+ - [x] Download images
  - [ ] Send images
  - [x] Load messages upon scrolling up
  - [x] Markdown formatting
