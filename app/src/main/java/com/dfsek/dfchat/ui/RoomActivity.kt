@@ -2,10 +2,8 @@ package com.dfsek.dfchat.ui
 
 import android.app.DownloadManager
 import android.content.Context
-import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -24,7 +22,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,7 +51,6 @@ import com.dfsek.dfchat.util.CameraFileProvider
 import com.dfsek.dfchat.util.RenderMessage
 import com.dfsek.dfchat.util.TimelineEventWrapper
 import com.dfsek.dfchat.util.getPreviewText
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import org.matrix.android.sdk.api.session.events.model.toModel
@@ -91,7 +87,7 @@ class RoomActivity : AppCompatActivity() {
                                     roomState = state,
                                     isSelectionOpen = selectionUIOpen
                                 )
-                                if (state.selectedImageUrl != null) {
+                                if (state.selectedImageEvent != null) {
                                     ImagePreviewUI(state)
                                 }
                                 SelectionUI(selectionUIOpen)
@@ -114,7 +110,7 @@ class RoomActivity : AppCompatActivity() {
         Box(modifier = Modifier.background(MaterialTheme.colors.background).fillMaxSize()) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(roomState.selectedImageUrl)
+                    .data(roomState.selectedImageEvent)
                     .crossfade(true)
                     .decoderFactory(BitmapFactoryDecoder.Factory())
                     .build(),
@@ -136,7 +132,7 @@ class RoomActivity : AppCompatActivity() {
         }
         Row(modifier = Modifier.fillMaxWidth().background(MaterialTheme.colors.onBackground.copy(alpha = 0.5f))) {
             IconButton(onClick = {
-                roomState.selectedImageUrl = null
+                roomState.selectedImageEvent = null
             }) {
                 Icon(
                     imageVector = Icons.Default.Close,
@@ -144,9 +140,9 @@ class RoomActivity : AppCompatActivity() {
                 )
             }
             IconButton(onClick = {
-                Log.d("Downloading image", chatRoomState.selectedImageUrl.toString())
+                Log.d("Downloading image", chatRoomState.selectedImageEvent.toString())
                 val manager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-                val uri = Uri.parse(chatRoomState.selectedImageUrl)
+                val uri = Uri.parse(chatRoomState.selectedImageEvent)
                 val request = DownloadManager.Request(uri)
                 request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
                 val enqueue = manager.enqueue(request)
@@ -332,7 +328,7 @@ class RoomActivity : AppCompatActivity() {
                         val imageContent =
                             event.event.root.getClearContent().toModel<MessageImageContent>() ?: return@combinedClickable
                         scope.launch {
-                            chatRoomState.selectedImageUrl = AppState.session!!.contentUrlResolver()
+                            chatRoomState.selectedImageEvent = AppState.session!!.contentUrlResolver()
                                 .resolveFullSize(imageContent.url)
                         }
                     }
@@ -407,7 +403,9 @@ class RoomActivity : AppCompatActivity() {
                 .collect {
                     if(it) {
                         imageUri?.let {
-                            chatRoomState.uploadImage(it)
+                            launch {
+                                chatRoomState.uploadImage(this@RoomActivity, it)
+                            }
                             imageUri = null
                             hasImage = false
                             imageDialogOpen.value = false

@@ -13,13 +13,12 @@ class CameraFileProvider : FileProvider(R.xml.filepaths) {
             directory.mkdirs()
             val file = File.createTempFile(
                 "image_upload",
-                ".png",
+                null,
                 directory
             )
-            val authority = context.packageName + ".uploadprovider"
             return getUriForFile(
                 context,
-                authority,
+                "com.dfsek.dfchat.util.uploadprovider",
                 file,
             )
         }

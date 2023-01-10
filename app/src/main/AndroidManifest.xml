@@ -120,7 +120,7 @@
         </provider>
         <provider
                 android:name=".util.CameraFileProvider"
-                android:authorities="com.dfsek.dfchat.uploadprovider"
+                android:authorities="com.dfsek.dfchat.util.uploadprovider"
                 android:grantUriPermissions="true"
                 android:exported="false">
             <meta-data

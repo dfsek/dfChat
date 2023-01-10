@@ -47,6 +47,7 @@ private fun TimelineEvent.RenderMessageEvent(modifier: Modifier = Modifier) {
 
             var image by remember { mutableStateOf<File?>(null) }
 
+
             LaunchedEffect(imageContent) {
                 try {
                     image = AppState.session!!.fileService().downloadFile(imageContent)

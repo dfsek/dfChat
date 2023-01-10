@@ -1,5 +1,8 @@
 package com.dfsek.dfchat.state
 
+import android.content.Context
+import android.graphics.BitmapFactory
+import android.graphics.BitmapFactory.Options
 import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.*
@@ -20,7 +23,7 @@ class ChatRoomState(
 ) : Timeline.Listener {
     private var timeline: Timeline? by mutableStateOf(null)
     var replyTo: TimelineEvent? by mutableStateOf(null)
-    var selectedImageUrl: String? by mutableStateOf(null)
+    var selectedImageEvent: String? by mutableStateOf(null)
     private var timelineEvents: List<TimelineEvent> by mutableStateOf(emptyList())
         private set
 
@@ -98,11 +101,19 @@ class ChatRoomState(
             .sendTextMessage(text = message, autoMarkdown = true)
     }
 
-    fun uploadImage(uri: Uri) {
+    fun uploadImage(context: Context, uri: Uri) {
+        val options = Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeStream(context.contentResolver.openInputStream(uri), null, options)
+
         room.sendService().sendMedia(
-            attachment = ContentAttachmentData(queryUri = uri, mimeType = "image/png", type = ContentAttachmentData.Type.IMAGE),
+            attachment = ContentAttachmentData(
+                queryUri = uri,
+                width = options.outWidth.toLong(),
+                height = options.outHeight.toLong(),
+                mimeType = options.outMimeType,
+                type = ContentAttachmentData.Type.IMAGE),
             compressBeforeSending = true,
-            roomIds = setOf(room.roomId)
+            roomIds = emptySet()
         )
     }
 
