@@ -68,7 +68,7 @@ private fun TimelineEvent.RenderMessageEvent(modifier: Modifier = Modifier) {
                         .build(),
                     contentScale = ContentScale.Fit,
                     contentDescription = null,
-                    modifier = modifier.fillMaxWidth().padding(PaddingValues(end = 12.dp))
+                    modifier = modifier.fillMaxWidth().padding(PaddingValues(end = 24.dp))
                 )
             } ?: Text("Rendering image...")
         }
