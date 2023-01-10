@@ -1,7 +1,9 @@
 package com.dfsek.dfchat.util
 
 import android.util.Log
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
@@ -9,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
@@ -65,7 +68,7 @@ private fun TimelineEvent.RenderMessageEvent(modifier: Modifier = Modifier) {
                         .build(),
                     contentScale = ContentScale.Fit,
                     contentDescription = null,
-                    modifier = modifier.fillMaxWidth()
+                    modifier = modifier.fillMaxWidth().padding(PaddingValues(end = 12.dp))
                 )
             } ?: Text("Rendering image...")
         }

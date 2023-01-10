@@ -13,10 +13,10 @@ TODO:
  - [x] Render encrypted message images
  - [x] Preview images
  - [x] Download images
- - [ ] Send images
+ - [x] Send images
  - [x] Load messages upon scrolling up
  - [x] Markdown formatting
- - [ ] Remove redacted events from local timeline
+ - [x] Remove redacted events from local timeline
  - [x] Message redacting
  - [x] Message replies
  - [ ] Message editing
@@ -36,7 +36,7 @@ TODO:
  - [x] Custom theme support
  - [ ] Notifications
  - [ ] Read receipts
- - [ ] Typing indicators
+ - [x] Typing indicators
 
 Possible features:
  - [ ] Edit redactions

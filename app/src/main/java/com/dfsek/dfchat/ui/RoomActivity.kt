@@ -209,7 +209,9 @@ class RoomActivity : AppCompatActivity() {
 
         Surface {
             Box(modifier = Modifier.fillMaxSize()) {
+                var roomName by remember { mutableStateOf("") }
                 Column(modifier = Modifier.fillMaxSize()) {
+                    TopBar(roomName, Modifier.statusBarsPadding(), isSelectionOpen)
                     RoomMessages(roomState, scrollState, Modifier.weight(1f))
                     UserInput(
                         onMessageSent = { content ->
@@ -220,7 +222,6 @@ class RoomActivity : AppCompatActivity() {
                         modifier = Modifier.navigationBarsPadding().imePadding(),
                     )
                 }
-                var roomName by remember { mutableStateOf("") }
 
                 val lifecycleOwner = LocalLifecycleOwner.current
                 LaunchedEffect(roomState) {
@@ -228,8 +229,6 @@ class RoomActivity : AppCompatActivity() {
                         roomName = it
                     }
                 }
-
-                TopBar(roomName, Modifier.statusBarsPadding(), isSelectionOpen)
             }
         }
     }
@@ -311,8 +310,6 @@ class RoomActivity : AppCompatActivity() {
         timelineEvents: List<TimelineEventWrapper>
     ) {
         Row(modifier = modifier) {
-
-            Log.d("User Image", "Drawing image...")
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(state.getUserAvatar(senderInfo.userId))
@@ -323,7 +320,6 @@ class RoomActivity : AppCompatActivity() {
                 contentDescription = null,
                 modifier = Modifier.size(AppState.Preferences.roomAvatarSize.dp).clip(CircleShape)
             )
-
 
             Column {
                 Text(
