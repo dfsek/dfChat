@@ -53,7 +53,7 @@ class VerificationActivity : AppCompatActivity() {
         Column(modifier = Modifier.padding(6.dp)) {
             info.deviceId?.let { Text(it) }
             info.displayName?.let { Text(it) }
-            info.lastSeenIp?.let { Text("Last seen st $it") }
+            info.lastSeenIp?.let { Text("Last seen at $it") }
             Divider()
         }
     }
