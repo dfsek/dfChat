@@ -101,8 +101,8 @@ class GeneralActivity : AppCompatActivity() {
 
 
     companion object {
-        internal val AVATAR_SIZE_SPACES_KEY = "avatarSizeSpaces"
-        internal val AVATAR_SIZE_DMS_KEY = "avatarSizeDMs"
-        internal val AVATAR_SIZE_ROOMS_KEY = "avatarSizeRooms"
+        internal const val AVATAR_SIZE_SPACES_KEY = "avatarSizeSpaces"
+        internal const val AVATAR_SIZE_DMS_KEY = "avatarSizeDMs"
+        internal const val AVATAR_SIZE_ROOMS_KEY = "avatarSizeRooms"
     }
 }

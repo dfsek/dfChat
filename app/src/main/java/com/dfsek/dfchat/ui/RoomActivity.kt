@@ -4,6 +4,7 @@ import android.app.DownloadManager
 import android.content.Context
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -59,6 +60,9 @@ import org.matrix.android.sdk.api.session.room.model.message.MessageContent
 import org.matrix.android.sdk.api.session.room.model.message.MessageImageContent
 import org.matrix.android.sdk.api.session.room.sender.SenderInfo
 import org.matrix.android.sdk.api.session.room.timeline.TimelineEvent
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 import kotlin.math.roundToInt
 
 
@@ -76,7 +80,7 @@ class RoomActivity : AppCompatActivity() {
                                 val state = remember {
                                     ChatRoomState(
                                         room = it,
-                                        client = session
+                                        session = session
                                     ).also {
                                         it.startSync()
                                         chatRoomState = it
@@ -88,7 +92,7 @@ class RoomActivity : AppCompatActivity() {
                                     isSelectionOpen = selectionUIOpen
                                 )
                                 if (state.selectedImageEvent != null) {
-                                    ImagePreviewUI(state)
+                                    ImagePreviewUI()
                                 }
                                 SelectionUI(selectionUIOpen)
                             }
@@ -100,58 +104,78 @@ class RoomActivity : AppCompatActivity() {
     }
 
     @Composable
-    fun ImagePreviewUI(roomState: ChatRoomState) {
+    fun ImagePreviewUI() {
         var scale by remember { mutableStateOf(1f) }
         var translation by remember { mutableStateOf(Offset.Zero) }
+
+        var image by remember { mutableStateOf<File?>(null) }
+
+        val imageContent = chatRoomState.selectedImageEvent?.root?.getClearContent()?.toModel<MessageImageContent>() ?: throw IllegalStateException("Image preview event is not image.")
+
+        LaunchedEffect(imageContent) {
+            try {
+                image = AppState.session!!.fileService().downloadFile(imageContent)
+            } catch (e: IllegalArgumentException) {
+                e.printStackTrace()
+            }
+        }
+
 
         val maxScale = 8f
         val minScale = 0.5f
 
         Box(modifier = Modifier.background(MaterialTheme.colors.background).fillMaxSize()) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(roomState.selectedImageEvent)
-                    .crossfade(true)
-                    .decoderFactory(BitmapFactoryDecoder.Factory())
-                    .build(),
-                contentScale = ContentScale.Fit,
-                contentDescription = null,
-                modifier = Modifier.align(Alignment.Center)
-                    .offset { IntOffset(translation.x.roundToInt(), translation.y.roundToInt()) }
-                    .graphicsLayer {
-                        scaleX = scale
-                        scaleY = scale
-                    }.clip(RectangleShape).fillMaxSize().pointerInput(Unit) {
-                        detectTransformGestures { centroid, pan, zoom, rotation ->
-                            scale = (scale * zoom).coerceIn(minScale..maxScale)
-                            translation = translation.plus(pan.times(scale))
+            image?.let {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(it)
+                        .crossfade(true)
+                        .decoderFactory(BitmapFactoryDecoder.Factory())
+                        .build(),
+                    contentScale = ContentScale.Fit,
+                    contentDescription = null,
+                    modifier = Modifier.align(Alignment.Center)
+                        .offset { IntOffset(translation.x.roundToInt(), translation.y.roundToInt()) }
+                        .graphicsLayer {
+                            scaleX = scale
+                            scaleY = scale
+                        }.clip(RectangleShape).fillMaxSize().pointerInput(Unit) {
+                            detectTransformGestures { centroid, pan, zoom, rotation ->
+                                scale = (scale * zoom).coerceIn(minScale..maxScale)
+                                translation = translation.plus(pan.times(scale))
+                            }
                         }
-                    }
-                    .clipToBounds()
-            )
+                        .clipToBounds()
+                )
+            } ?: Text("Rendering image...")
         }
         Row(modifier = Modifier.fillMaxWidth().background(MaterialTheme.colors.onBackground.copy(alpha = 0.5f))) {
             IconButton(onClick = {
-                roomState.selectedImageEvent = null
+                chatRoomState.selectedImageEvent = null
             }) {
                 Icon(
                     imageVector = Icons.Default.Close,
                     contentDescription = "Close"
                 )
             }
-            IconButton(onClick = {
-                Log.d("Downloading image", chatRoomState.selectedImageEvent.toString())
-                val manager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-                val uri = Uri.parse(chatRoomState.selectedImageEvent)
-                val request = DownloadManager.Request(uri)
-                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
-                val enqueue = manager.enqueue(request)
-                Log.d("Request queued", enqueue.toString())
-            }) {
-                Icon(
-                    imageVector = Icons.Default.KeyboardArrowDown,
-                    contentDescription = "Download"
-                )
+            image?.let {
+                IconButton(onClick = {
+                    Log.d("Downloading image", chatRoomState.selectedImageEvent.toString())
+                    val target = File(
+                        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                        chatRoomState.selectedImageEvent!!.eventId + "_" + imageContent.body
+                    )
+                    FileInputStream(it).use {
+                        FileOutputStream(target).use { output ->
+                            it.copyTo(output)
+                        }
+                    }
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowDown,
+                        contentDescription = "Download"
+                    )
+                }
             }
         }
     }
@@ -243,6 +267,7 @@ class RoomActivity : AppCompatActivity() {
                     }
                     TextField(value = input, onValueChange = {
                         input = it
+                        chatRoomState.room.typingService().userIsTyping()
                     }, modifier = Modifier.weight(1f))
                     Button(onClick = {
                         if (input.trim().isNotEmpty()) {
@@ -325,11 +350,8 @@ class RoomActivity : AppCompatActivity() {
             onClick = {
                 messageContent?.let {
                     if (it.msgType == "m.image") {
-                        val imageContent =
-                            event.event.root.getClearContent().toModel<MessageImageContent>() ?: return@combinedClickable
                         scope.launch {
-                            chatRoomState.selectedImageEvent = AppState.session!!.contentUrlResolver()
-                                .resolveFullSize(imageContent.url)
+                            chatRoomState.selectedImageEvent = event.event
                         }
                     }
                 }
@@ -478,6 +500,7 @@ class RoomActivity : AppCompatActivity() {
     override fun finish() {
         super.finish()
         if (this::chatRoomState.isInitialized) {
+            chatRoomState.room.typingService().userStopsTyping()
             chatRoomState.stopSync()
         }
     }

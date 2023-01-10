@@ -19,11 +19,11 @@ import org.matrix.android.sdk.api.session.room.timeline.TimelineSettings
 
 class ChatRoomState(
     val room: Room,
-    val client: Session
+    val session: Session
 ) : Timeline.Listener {
     private var timeline: Timeline? by mutableStateOf(null)
     var replyTo: TimelineEvent? by mutableStateOf(null)
-    var selectedImageEvent: String? by mutableStateOf(null)
+    var selectedImageEvent: TimelineEvent? by mutableStateOf(null)
     private var timelineEvents: List<TimelineEvent> by mutableStateOf(emptyList())
         private set
 
@@ -122,7 +122,7 @@ class ChatRoomState(
     }
 
     fun getUserAvatar(id: String): String? {
-        return client
+        return session
             .userService()
             .getUser(id)
             ?.avatarUrl?.let { getAvatarUrl(it) }
