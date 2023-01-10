@@ -101,21 +101,6 @@ class ChatRoomState(
             .sendTextMessage(text = message, autoMarkdown = true)
     }
 
-    fun uploadImage(context: Context, uri: Uri) {
-        val options = Options().apply { inJustDecodeBounds = true }
-        BitmapFactory.decodeStream(context.contentResolver.openInputStream(uri), null, options)
-
-        room.sendService().sendMedia(
-            attachment = ContentAttachmentData(
-                queryUri = uri,
-                width = options.outWidth.toLong(),
-                height = options.outHeight.toLong(),
-                mimeType = options.outMimeType,
-                type = ContentAttachmentData.Type.IMAGE),
-            compressBeforeSending = true,
-            roomIds = emptySet()
-        )
-    }
 
     fun redact(event: TimelineEvent) {
         room.sendService().redactEvent(event = event.root, reason = null)

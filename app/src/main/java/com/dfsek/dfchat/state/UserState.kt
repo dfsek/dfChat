@@ -15,7 +15,6 @@ class UserState(val client: Session) {
 
     suspend fun logout() {
         client.signOutService().signOut(true)
-        client.close()
         AppState.session = null
     }
 }

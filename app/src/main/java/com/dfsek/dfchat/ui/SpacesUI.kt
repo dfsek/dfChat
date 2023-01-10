@@ -47,122 +47,123 @@ fun Activity.RootSpacesSelection(modifier: Modifier = Modifier, isOpen: MutableS
         .background(MaterialTheme.colors.background)
         .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {}) {
         var rootSpaces by remember { mutableStateOf<List<Room>>(emptyList()) }
-        val session = remember { AppState.session as Session }
-        val spaceStack = remember { Stack<Space>() }
-        var currentRooms by remember { mutableStateOf<List<Room>?>(null) }
-        LaunchedEffect(AppState.session) {
-            rootSpaces = session
-                .spaceService()
-                .getRootSpaceSummaries()
-                .map { session.spaceService().getSpace(it.roomId)?.asRoom() as Room }
-            if (currentRooms == null) currentRooms = rootSpaces
-            Log.d("Root Spaces", "Populating root spaces, Size: ${rootSpaces.size}")
-        }
+        AppState.session?.let { session ->
+            val spaceStack = remember { Stack<Space>() }
+            var currentRooms by remember { mutableStateOf<List<Room>?>(null) }
+            LaunchedEffect(AppState.session) {
+                rootSpaces = session
+                    .spaceService()
+                    .getRootSpaceSummaries()
+                    .map { session.spaceService().getSpace(it.roomId)?.asRoom() as Room }
+                if (currentRooms == null) currentRooms = rootSpaces
+                Log.d("Root Spaces", "Populating root spaces, Size: ${rootSpaces.size}")
+            }
 
-        Row {
-            IconButton(onClick = {
-                if (spaceStack.empty()) {
-                    isOpen.value = false
-                } else {
-                    spaceStack.pop()
-                    currentRooms = if (spaceStack.empty()) {
-                        rootSpaces.map { it.roomSummary() as RoomSummary }
+            Row {
+                IconButton(onClick = {
+                    if (spaceStack.empty()) {
+                        isOpen.value = false
                     } else {
-                        session
-                            .spaceService()
-                            .getSpaceSummaries(
-                                RoomSummaryQueryParams.Builder()
-                                    .apply { spaceFilter = SpaceFilter.ActiveSpace(spaceStack.peek().spaceId) }.build()
-                            )
-                    }.map { session.roomService().getRoom(it.roomId) as Room }
-                }
-            }) {
-                Icon(
-                    imageVector = Icons.Default.KeyboardArrowLeft,
-                    contentDescription = "Close"
-                )
-            }
-        }
-        val avatarSize = AppState.Preferences.spacesAvatarSize
-        LazyColumn {
-            if(spaceStack.empty()) {
-                item {
-                    Row(modifier = Modifier.fillMaxWidth().clickable {
-                        runOnUiThread {
-                            startActivity(Intent(applicationContext, DirectMessagesActivity::class.java))
-                            finish()
-                        }
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = "Direct Messages",
-                            modifier = Modifier.size(avatarSize.dp)
-                        )
-                        Text("Direct Messages", fontSize = 18.sp)
+                        spaceStack.pop()
+                        currentRooms = if (spaceStack.empty()) {
+                            rootSpaces.map { it.roomSummary() as RoomSummary }
+                        } else {
+                            session
+                                .spaceService()
+                                .getSpaceSummaries(
+                                    RoomSummaryQueryParams.Builder()
+                                        .apply { spaceFilter = SpaceFilter.ActiveSpace(spaceStack.peek().spaceId) }.build()
+                                )
+                        }.map { session.roomService().getRoom(it.roomId) as Room }
                     }
-                }
-                item {
-                    Row(modifier = Modifier.fillMaxWidth().clickable {
-                        runOnUiThread {
-                            startActivity(Intent(applicationContext, GroupMessagesActivity::class.java))
-                            finish()
-                        }
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.Email,
-                            contentDescription = "Group Messages",
-                            modifier = Modifier.size(avatarSize.dp)
-                        )
-                        Text("Group Messages", fontSize = 18.sp)
-                    }
-                }
-            }
-
-            items(currentRooms ?: emptyList(), key = {
-                it.roomId
-            }) { room ->
-                Row(modifier = Modifier.clickable {
-                    room.asSpace()?.let {
-                        spaceStack.push(it)
-                        currentRooms = session
-                            .spaceService()
-                            .getSpaceSummaries(
-                                RoomSummaryQueryParams.Builder()
-                                    .apply { spaceFilter = SpaceFilter.ActiveSpace(it.spaceId) }.build()
-                            )
-                            .filter { !it.isDirect } // don't include DMs in space previews
-                            .map { session.roomService().getRoom(it.roomId) as Room }
-                    } ?: startActivity(Intent(applicationContext, RoomActivity::class.java).apply {
-                        putExtra("room", room.roomId)
-                    })
-                }.fillMaxWidth()) {
-                    var avatarUrl by remember { mutableStateOf<String?>(null) }
-                    val name = remember { room.roomSummary()?.displayName ?: "" }
-                    val lastContent = remember { room.roomSummary()?.latestPreviewableEvent }
-
-
-                    LaunchedEffect(room) {
-                        avatarUrl = getAvatarUrl(room.roomSummary()?.avatarUrl, avatarSize)
-                    }
-
-                    avatarUrl?.let {
-                        AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(it)
-                                .crossfade(true)
-                                .decoderFactory(BitmapFactoryDecoder.Factory())
-                                .build(),
-                            contentScale = ContentScale.Fit,
-                            contentDescription = null,
-                            modifier = Modifier.size(avatarSize.dp).clip(CircleShape)
-                        )
-                    } ?: Box(
-                        modifier = Modifier.size(avatarSize.dp).clip(CircleShape).background(Color.Cyan)
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowLeft,
+                        contentDescription = "Close"
                     )
+                }
+            }
+            val avatarSize = AppState.Preferences.spacesAvatarSize
+            LazyColumn {
+                if(spaceStack.empty()) {
+                    item {
+                        Row(modifier = Modifier.fillMaxWidth().clickable {
+                            runOnUiThread {
+                                startActivity(Intent(applicationContext, DirectMessagesActivity::class.java))
+                                finish()
+                            }
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = "Direct Messages",
+                                modifier = Modifier.size(avatarSize.dp)
+                            )
+                            Text("Direct Messages", fontSize = 18.sp)
+                        }
+                    }
+                    item {
+                        Row(modifier = Modifier.fillMaxWidth().clickable {
+                            runOnUiThread {
+                                startActivity(Intent(applicationContext, GroupMessagesActivity::class.java))
+                                finish()
+                            }
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Email,
+                                contentDescription = "Group Messages",
+                                modifier = Modifier.size(avatarSize.dp)
+                            )
+                            Text("Group Messages", fontSize = 18.sp)
+                        }
+                    }
+                }
 
-                    Column {
-                        Text(name, fontSize = 18.sp)
-                        Text(lastContent?.getPreviewText() ?: "", fontSize = 12.sp)
+                items(currentRooms ?: emptyList(), key = {
+                    it.roomId
+                }) { room ->
+                    Row(modifier = Modifier.clickable {
+                        room.asSpace()?.let {
+                            spaceStack.push(it)
+                            currentRooms = session
+                                .spaceService()
+                                .getSpaceSummaries(
+                                    RoomSummaryQueryParams.Builder()
+                                        .apply { spaceFilter = SpaceFilter.ActiveSpace(it.spaceId) }.build()
+                                )
+                                .filter { !it.isDirect } // don't include DMs in space previews
+                                .map { session.roomService().getRoom(it.roomId) as Room }
+                        } ?: startActivity(Intent(applicationContext, RoomActivity::class.java).apply {
+                            putExtra("room", room.roomId)
+                        })
+                    }.fillMaxWidth()) {
+                        var avatarUrl by remember { mutableStateOf<String?>(null) }
+                        val name = remember { room.roomSummary()?.displayName ?: "" }
+                        val lastContent = remember { room.roomSummary()?.latestPreviewableEvent }
+
+
+                        LaunchedEffect(room) {
+                            avatarUrl = getAvatarUrl(room.roomSummary()?.avatarUrl, avatarSize)
+                        }
+
+                        avatarUrl?.let {
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(it)
+                                    .crossfade(true)
+                                    .decoderFactory(BitmapFactoryDecoder.Factory())
+                                    .build(),
+                                contentScale = ContentScale.Fit,
+                                contentDescription = null,
+                                modifier = Modifier.size(avatarSize.dp).clip(CircleShape)
+                            )
+                        } ?: Box(
+                            modifier = Modifier.size(avatarSize.dp).clip(CircleShape).background(Color.Cyan)
+                        )
+
+                        Column {
+                            Text(name, fontSize = 18.sp)
+                            Text(lastContent?.getPreviewText() ?: "", fontSize = 12.sp)
+                        }
                     }
                 }
             }

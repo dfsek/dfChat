@@ -3,6 +3,7 @@
           xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
             android:name=".DfChat"
@@ -117,15 +118,6 @@
                     android:name="androidx.work.WorkManagerInitializer"
                     android:value="androidx.startup"
                     tools:node="remove" />
-        </provider>
-        <provider
-                android:name=".util.CameraFileProvider"
-                android:authorities="com.dfsek.dfchat.util.uploadprovider"
-                android:grantUriPermissions="true"
-                android:exported="false">
-            <meta-data
-                    android:name="android.support.FILE_PROVIDER_PATHS"
-                    android:resource="@xml/filepaths" />
         </provider>
     </application>
 

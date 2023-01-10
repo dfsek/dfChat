@@ -51,6 +51,8 @@ class AccountActivity : AppCompatActivity() {
                         .authenticationService()
                         .getLoginWizard()
                         .loginWithToken(token)
+                    AppState.session?.open()
+                    AppState.session?.syncService()?.startSync(true)
 
                     runOnUiThread {
                         startActivity(Intent(applicationContext, DirectMessagesActivity::class.java))

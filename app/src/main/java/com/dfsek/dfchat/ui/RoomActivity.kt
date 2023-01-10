@@ -1,10 +1,9 @@
 package com.dfsek.dfchat.ui
 
-import android.app.DownloadManager
-import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
+import android.provider.MediaStore
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -48,11 +47,11 @@ import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
 import com.dfsek.dfchat.AppState
 import com.dfsek.dfchat.state.ChatRoomState
-import com.dfsek.dfchat.util.CameraFileProvider
 import com.dfsek.dfchat.util.RenderMessage
 import com.dfsek.dfchat.util.TimelineEventWrapper
 import com.dfsek.dfchat.util.getPreviewText
-import im.vector.lib.multipicker.ImagePicker
+import com.dfsek.dfchat.util.vector.multipicker.toContentAttachmentData
+import im.vector.lib.multipicker.MultiPicker
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import org.matrix.android.sdk.api.session.events.model.toModel
@@ -65,7 +64,6 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import kotlin.math.roundToInt
-import im.vector.lib.multipicker.
 
 class RoomActivity : AppCompatActivity() {
     private lateinit var chatRoomState: ChatRoomState
@@ -111,7 +109,8 @@ class RoomActivity : AppCompatActivity() {
 
         var image by remember { mutableStateOf<File?>(null) }
 
-        val imageContent = chatRoomState.selectedImageEvent?.root?.getClearContent()?.toModel<MessageImageContent>() ?: throw IllegalStateException("Image preview event is not image.")
+        val imageContent = chatRoomState.selectedImageEvent?.root?.getClearContent()?.toModel<MessageImageContent>()
+            ?: throw IllegalStateException("Image preview event is not image.")
 
         LaunchedEffect(imageContent) {
             try {
@@ -242,7 +241,7 @@ class RoomActivity : AppCompatActivity() {
     ) {
         var input by remember { mutableStateOf("") }
         val imageUi = remember { mutableStateOf(false) }
-        if(imageUi.value) {
+        if (imageUi.value) {
             ImageDialog(imageUi)
         }
 
@@ -367,7 +366,11 @@ class RoomActivity : AppCompatActivity() {
     }
 
     @Composable
-    fun MessageDropdown(event: TimelineEvent, expanded: MutableState<Boolean>, deleteDialogOpen: MutableState<Boolean>) {
+    fun MessageDropdown(
+        event: TimelineEvent,
+        expanded: MutableState<Boolean>,
+        deleteDialogOpen: MutableState<Boolean>
+    ) {
         val clipboardManager = LocalClipboardManager.current
         DropdownMenu(
             expanded = expanded.value,
@@ -407,36 +410,44 @@ class RoomActivity : AppCompatActivity() {
 
     @Composable
     fun ImageDialog(imageDialogOpen: MutableState<Boolean>) {
-        var hasImage by remember { mutableStateOf(false) }
         var imageUri by remember { mutableStateOf<Uri?>(null) }
-        val cameraLauncher =
-            rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
-                hasImage = success
-            }
+
         val imagePicker = rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.GetContent(),
-            onResult = { uri ->
-                hasImage = uri != null
-                imageUri = uri
+            contract = ActivityResultContracts.StartActivityForResult(),
+            onResult = {
+                val attachments = MultiPicker.get(MultiPicker.MEDIA).getSelectedFiles(this, it.data)
+                    .map {
+                        it.toContentAttachmentData()
+                    }
+                Log.d("ATTACHMENTS", attachments.toString())
+                chatRoomState.room.sendService().sendMedias(
+                    attachments = attachments,
+                    compressBeforeSending = true,
+                    roomIds = emptySet()
+                )
+                AppState.session!!.syncService().startSync(true)
+                imageDialogOpen.value = false
             }
         )
-        LaunchedEffect(hasImage) {
-            snapshotFlow { hasImage }
-                .distinctUntilChanged()
-                .collect {
-                    if(it) {
-                        imageUri?.let {
-                            it.toMultiPickerImageType()
-                            launch {
-                                chatRoomState.uploadImage(this@RoomActivity, it)
-                            }
-                            imageUri = null
-                            hasImage = false
+
+        val imagePickerCamera = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.StartActivityForResult(),
+            onResult = {
+                imageUri?.let {
+                    MultiPicker.get(MultiPicker.CAMERA).getTakenPhoto(this, it)
+                        ?.let {
+                            chatRoomState.room.sendService().sendMedia(
+                                attachment = it.toContentAttachmentData(),
+                                compressBeforeSending = true,
+                                roomIds = emptySet()
+                            )
                             imageDialogOpen.value = false
                         }
-                    }
+                    imageUri = null
                 }
-        }
+            }
+
+        )
 
         Dialog(
             onDismissRequest = {
@@ -447,17 +458,15 @@ class RoomActivity : AppCompatActivity() {
                     Column(modifier = Modifier.padding(24.dp)) {
                         Text("Upload Image", fontSize = 18.sp, modifier = Modifier.padding(6.dp))
                         Button(onClick = {
-                            MultiPicker.Type
-                            imagePicker.launch("image/*")
+                            MultiPicker.get(MultiPicker.IMAGE).startWith(imagePicker)
                         }) {
                             Text("Choose from Gallery")
                         }
                         Divider()
                         Text("Use Camera", fontSize = 18.sp, modifier = Modifier.padding(6.dp))
                         Button(onClick = {
-                            val uri = CameraFileProvider.getImageUri(this@RoomActivity)
-                            imageUri = uri
-                            cameraLauncher.launch(uri)
+                            imageUri = MultiPicker.get(MultiPicker.CAMERA)
+                                .startWithExpectingFile(this@RoomActivity, imagePickerCamera)
                         }) {
                             Text("Take picture with Camera")
                         }

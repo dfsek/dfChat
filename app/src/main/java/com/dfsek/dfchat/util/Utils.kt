@@ -2,9 +2,15 @@ package com.dfsek.dfchat.util
 
 import android.content.ActivityNotFoundException
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.provider.MediaStore
+import android.util.Log
 import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.browser.customtabs.CustomTabsSession
 import androidx.compose.runtime.*
@@ -12,8 +18,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.LiveData
 import com.dfsek.dfchat.AppState
+import im.vector.lib.multipicker.entity.MultiPickerBaseType
+import im.vector.lib.multipicker.entity.MultiPickerFileType
 import org.matrix.android.sdk.api.session.content.ContentAttachmentData
 import org.matrix.android.sdk.api.session.content.ContentUrlResolver
+import org.matrix.android.sdk.api.util.MimeTypes.isMimeTypeAudio
+import org.matrix.android.sdk.api.util.MimeTypes.isMimeTypeImage
+import org.matrix.android.sdk.api.util.MimeTypes.isMimeTypeVideo
 
 fun openUrlInChromeCustomTab(
     context: Context,
