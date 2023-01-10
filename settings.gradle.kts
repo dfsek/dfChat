@@ -16,3 +16,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "dfChat"
 include(":app")
+include(":vector:multipicker")
+include(":vector:core-utils")

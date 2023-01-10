@@ -3,6 +3,7 @@ package com.dfsek.dfchat.util
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.net.Uri
+import android.provider.MediaStore
 import android.widget.Toast
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.browser.customtabs.CustomTabsSession
@@ -11,6 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.LiveData
 import com.dfsek.dfchat.AppState
+import org.matrix.android.sdk.api.session.content.ContentAttachmentData
 import org.matrix.android.sdk.api.session.content.ContentUrlResolver
 
 fun openUrlInChromeCustomTab(
@@ -65,3 +67,4 @@ fun Color.toHexString(): String {
 fun String.toColor(): Color {
     return Color(android.graphics.Color.parseColor(this))
 }
+

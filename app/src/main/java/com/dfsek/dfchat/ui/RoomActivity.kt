@@ -52,6 +52,7 @@ import com.dfsek.dfchat.util.CameraFileProvider
 import com.dfsek.dfchat.util.RenderMessage
 import com.dfsek.dfchat.util.TimelineEventWrapper
 import com.dfsek.dfchat.util.getPreviewText
+import im.vector.lib.multipicker.ImagePicker
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import org.matrix.android.sdk.api.session.events.model.toModel
@@ -64,7 +65,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import kotlin.math.roundToInt
-
+import im.vector.lib.multipicker.
 
 class RoomActivity : AppCompatActivity() {
     private lateinit var chatRoomState: ChatRoomState
@@ -425,6 +426,7 @@ class RoomActivity : AppCompatActivity() {
                 .collect {
                     if(it) {
                         imageUri?.let {
+                            it.toMultiPickerImageType()
                             launch {
                                 chatRoomState.uploadImage(this@RoomActivity, it)
                             }
@@ -445,6 +447,7 @@ class RoomActivity : AppCompatActivity() {
                     Column(modifier = Modifier.padding(24.dp)) {
                         Text("Upload Image", fontSize = 18.sp, modifier = Modifier.padding(6.dp))
                         Button(onClick = {
+                            MultiPicker.Type
                             imagePicker.launch("image/*")
                         }) {
                             Text("Choose from Gallery")

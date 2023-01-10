@@ -50,6 +50,7 @@ dependencies {
     implementation("androidx.navigation:navigation-fragment-ktx:2.5.3")
     implementation("androidx.navigation:navigation-ui-ktx:2.5.3")
     implementation("androidx.preference:preference-ktx:1.2.0")
+    implementation(project(":vector:multipicker"))
     val room_version = "2.4.3"
 
     implementation("androidx.room:room-runtime:$room_version")
