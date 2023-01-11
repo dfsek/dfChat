@@ -36,7 +36,8 @@ TODO:
  - [x] Custom theme support
  - [ ] Notifications
  - [ ] Read receipts
- - [x] Typing indicators
+ - [x] Typing indicator sending
+ - [ ] Typing indicator rendering
 
 Possible features:
  - [ ] Edit redactions
