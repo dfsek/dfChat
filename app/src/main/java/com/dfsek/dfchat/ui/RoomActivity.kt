@@ -289,13 +289,14 @@ class RoomActivity : AppCompatActivity() {
         modifier: Modifier
     ) {
         Box(modifier = modifier) {
+            val events by remember { state.splitEvents }
             LazyColumn(
                 state = scrollState,
                 modifier = Modifier
                     .fillMaxSize(),
                 reverseLayout = true
             ) {
-                items(state.splitEvents()) {
+                items(events) {
                     MessageBlock(state, senderInfo = it.first, timelineEvents = it.second)
                 }
             }

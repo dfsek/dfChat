@@ -25,11 +25,11 @@ class ChatRoomState(
     var replyTo: TimelineEvent? by mutableStateOf(null)
     var selectedImageEvent: TimelineEvent? by mutableStateOf(null)
     private var timelineEvents: List<TimelineEvent> by mutableStateOf(emptyList())
-        private set
-
+    var splitEvents: MutableState<List<Pair<SenderInfo, List<TimelineEventWrapper>>>> = mutableStateOf(emptyList())
 
     override fun onTimelineUpdated(snapshot: List<TimelineEvent>) {
         timelineEvents = snapshot.reversed()
+        splitEvents.value = splitEvents()
     }
 
 
@@ -49,7 +49,7 @@ class ChatRoomState(
         timeline = null
     }
 
-    fun splitEvents(): List<Pair<SenderInfo, List<TimelineEventWrapper>>> {
+    private fun splitEvents(): List<Pair<SenderInfo, List<TimelineEventWrapper>>> {
         val list = mutableListOf<Pair<SenderInfo, MutableList<TimelineEventWrapper>>>()
 
         val redactionEventIDs = mutableSetOf<String>()
