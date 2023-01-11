@@ -80,6 +80,8 @@ dependencies {
     implementation (composeBom)
     androidTestImplementation (composeBom)
 
+    implementation("androidx.compose.material:material-icons-extended")
+
     implementation("androidx.compose.material:material")
 
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.5.1")

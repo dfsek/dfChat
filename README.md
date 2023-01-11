@@ -8,7 +8,7 @@ Android.
 TODO:
 
  - [x] SSO sign in
- - [ ] Username/password sign in
+ - [x] Username/password sign in
  - [x] Render message images
  - [x] Render encrypted message images
  - [x] Preview images
