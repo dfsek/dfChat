@@ -3,7 +3,6 @@ package com.dfsek.dfchat.ui
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
-import android.provider.MediaStore
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -47,6 +46,8 @@ import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
 import com.dfsek.dfchat.AppState
 import com.dfsek.dfchat.state.ChatRoomState
+import com.dfsek.dfchat.util.FixedDefaultFlingBehavior
+import com.dfsek.dfchat.util.FixedDefaultFlingBehavior.Companion.fixedFlingBehavior
 import com.dfsek.dfchat.util.RenderMessage
 import com.dfsek.dfchat.util.TimelineEventWrapper
 import com.dfsek.dfchat.util.getPreviewText
@@ -290,11 +291,12 @@ class RoomActivity : AppCompatActivity() {
     ) {
         Box(modifier = modifier) {
             val events by remember { state.splitEvents }
+            val fling = fixedFlingBehavior()
             LazyColumn(
                 state = scrollState,
-                modifier = Modifier
-                    .fillMaxSize(),
-                reverseLayout = true
+                modifier = Modifier.fillMaxSize(),
+                reverseLayout = true,
+                flingBehavior = fling
             ) {
                 items(events) {
                     MessageBlock(state, senderInfo = it.first, timelineEvents = it.second)
