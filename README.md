@@ -20,6 +20,7 @@ TODO:
  - [x] Message redacting
  - [x] Message replies
  - [ ] Message editing
+ - [x] Display message edits
  - [ ] Display reactions
  - [ ] Add reactions
  - [ ] Type emoji with `:`

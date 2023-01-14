@@ -11,11 +11,13 @@ import com.dfsek.dfchat.util.TimelineEventWrapper
 import com.dfsek.dfchat.util.getAvatarUrl
 import org.matrix.android.sdk.api.session.Session
 import org.matrix.android.sdk.api.session.content.ContentAttachmentData
+import org.matrix.android.sdk.api.session.events.model.isEdition
 import org.matrix.android.sdk.api.session.room.Room
 import org.matrix.android.sdk.api.session.room.sender.SenderInfo
 import org.matrix.android.sdk.api.session.room.timeline.Timeline
 import org.matrix.android.sdk.api.session.room.timeline.TimelineEvent
 import org.matrix.android.sdk.api.session.room.timeline.TimelineSettings
+import org.matrix.android.sdk.api.session.room.timeline.getRelationContent
 
 class ChatRoomState(
     val room: Room,
@@ -57,20 +59,32 @@ class ChatRoomState(
 
         val redactedBy = mutableMapOf<String, TimelineEvent>()
 
+        val replace = mutableMapOf<String, TimelineEvent>()
+
         timelineEvents.forEach {
             if (it.root.getClearType() == "m.room.redaction") {
                 redactedEventIDs.add(it.root.redacts!!)
                 redactionEventIDs.add(it.eventId)
                 redactedBy[it.root.redacts!!] = it
             }
+            if (it.root.isEdition()) {
+                replace[it.getRelationContent()!!.eventId!!] = it
+            }
         }
 
         fun createWrapper(event: TimelineEvent): TimelineEventWrapper =
-            if (redactedEventIDs.contains(event.eventId)) TimelineEventWrapper.Redacted(event, redactedBy[event.eventId]!!)
+            if (redactedEventIDs.contains(event.eventId)) TimelineEventWrapper.Redacted(
+                event,
+                redactedBy[event.eventId]!!
+            )
+            else if (replace.containsKey(event.eventId)) TimelineEventWrapper.Replaced(
+                event,
+                replace[event.eventId]!!
+            )
             else TimelineEventWrapper.Default(event)
 
         var lastUserId: SenderInfo? = null
-        timelineEvents.filter { !redactionEventIDs.contains(it.eventId) }.forEach {
+        timelineEvents.filter { !redactionEventIDs.contains(it.eventId) && !it.root.isEdition() }.forEach {
             if (lastUserId != null && it.senderInfo == lastUserId) {
                 list.last().second.add(createWrapper(it))
             } else {
