@@ -59,12 +59,10 @@ class AccountActivity : AppCompatActivity() {
             CoroutineScope(Dispatchers.Default).launch {
                 try {
                     Log.i("Session", "Signing in to matrix account")
-                    AppState.session = DfChat.getMatrix(this@AccountActivity)
+                    AppState.startSession( DfChat.getMatrix(this@AccountActivity)
                         .authenticationService()
                         .getLoginWizard()
-                        .loginWithToken(token)
-                    AppState.session?.open()
-                    AppState.session?.syncService()?.startSync(true)
+                        .loginWithToken(token))
 
                     runOnUiThread {
                         startActivity(Intent(applicationContext, DirectMessagesActivity::class.java))
@@ -231,10 +229,10 @@ class AccountActivity : AppCompatActivity() {
                             Button(onClick = {
                                 scope.launch {
                                     try {
-                                        AppState.session = DfChat.getMatrix(this@AccountActivity)
+                                        AppState.startSession(DfChat.getMatrix(this@AccountActivity)
                                             .authenticationService()
                                             .getLoginWizard()
-                                            .login(username, password, "dfchat")
+                                            .login(username, password, "dfchat"))
                                         AppState.session?.open()
                                         AppState.session?.syncService()?.startSync(true)
                                         visible.value = false

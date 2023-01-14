@@ -26,9 +26,7 @@ class DfChat : Application() {
         updatePrefs()
         if (lastSession != null) {
             Log.i("Session", "Restoring previous session.")
-            AppState.session = lastSession
-            lastSession.open()
-            lastSession.syncService().startSync(true)
+            AppState.startSession(lastSession)
         }
     }
     private fun createMatrix() {

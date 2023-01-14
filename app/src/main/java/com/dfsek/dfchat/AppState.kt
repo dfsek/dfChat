@@ -16,13 +16,25 @@ import com.dfsek.dfchat.util.GENERAL_PREFS
 import com.dfsek.dfchat.util.THEME_KEY
 import com.dfsek.dfchat.util.THEME_PREFS
 import com.dfsek.dfchat.util.toColor
+import kotlinx.coroutines.flow.collectLatest
 import org.matrix.android.sdk.api.session.Session
 import kotlin.math.roundToInt
 
 
 object AppState {
     var session: Session? by mutableStateOf(null)
+        private set
     var themeColors: Colors by mutableStateOf(lightColors()) // immediately overwritten.
+
+    fun startSession(it: Session) {
+        it.open()
+        it.syncService().startSync(true)
+        session = it
+    }
+
+    fun clearSession() {
+        session = null
+    }
 
     object Preferences {
         var spacesAvatarSize by mutableStateOf(-1)
