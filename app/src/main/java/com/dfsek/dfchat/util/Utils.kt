@@ -76,6 +76,7 @@ fun Color.toHexString(): String {
 }
 
 fun String.toColor(): Color {
+    if(this.isEmpty()) throw IllegalArgumentException("Empty color")
     return Color(android.graphics.Color.parseColor(this))
 }
 
