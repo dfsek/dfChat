@@ -36,17 +36,17 @@ fun TimelineEvent.RenderMessage(modifier: Modifier = Modifier): Unit = when (roo
 
 @Composable
 private fun TimelineEvent.RenderMessageEvent(modifier: Modifier = Modifier) {
-    val messageContent = remember { root.getClearContent().toModel<MessageContent>() } ?: return
+    val messageContent = root.getClearContent().toModel<MessageContent>() ?: return
     when (messageContent.msgType) {
         "m.text" -> RichTextThemeIntegration(contentColor = { MaterialTheme.colors.onBackground }) {
-            val content = remember { formatMessage(this@RenderMessageEvent) }
             RichText(modifier = modifier) {
-                Markdown(content = content)
+                Markdown(content = formatMessage(this@RenderMessageEvent))
             }
         }
 
         "m.image" -> {
-            val imageContent = remember { root.getClearContent().toModel<MessageImageContent>() } ?: return
+            val imageContent = root.getClearContent().toModel<MessageImageContent>() ?: return
+            Log.d("IMAGE CONTENT", imageContent.toString())
 
             var image by remember { mutableStateOf<File?>(null) }
 
