@@ -1,6 +1,6 @@
 package com.dfsek.dfchat.util
 
-import org.matrix.android.sdk.api.RoomDisplayNameFallbackProvider
+import org.matrix.android.sdk.api.provider.RoomDisplayNameFallbackProvider
 
 object RoomDisplayNameFallbackProviderImpl : RoomDisplayNameFallbackProvider {
 

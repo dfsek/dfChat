@@ -14,6 +14,7 @@ import com.dfsek.dfchat.util.THEME_KEY
 import com.dfsek.dfchat.util.THEME_PREFS
 import org.matrix.android.sdk.api.Matrix
 import org.matrix.android.sdk.api.MatrixConfiguration
+import org.matrix.android.sdk.api.provider.RoomDisplayNameFallbackProvider
 
 class DfChat : Application() {
     private lateinit var matrix: Matrix

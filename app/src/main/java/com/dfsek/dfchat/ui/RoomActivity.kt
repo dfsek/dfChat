@@ -56,6 +56,7 @@ import im.vector.lib.multipicker.MultiPicker
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import org.matrix.android.sdk.api.session.content.ContentAttachmentData
+import org.matrix.android.sdk.api.session.events.model.getMsgType
 import org.matrix.android.sdk.api.session.events.model.toModel
 import org.matrix.android.sdk.api.session.getRoom
 import org.matrix.android.sdk.api.session.room.model.message.MessageContent
@@ -143,7 +144,7 @@ class RoomActivity : AppCompatActivity() {
                             scaleX = scale
                             scaleY = scale
                         }.clip(RectangleShape).fillMaxSize().pointerInput(Unit) {
-                            detectTransformGestures { centroid, pan, zoom, rotation ->
+                            detectTransformGestures { _, pan, zoom, _ ->
                                 scale = (scale * zoom).coerceIn(minScale..maxScale)
                                 translation = translation.plus(pan.times(scale))
                             }
@@ -366,6 +367,7 @@ class RoomActivity : AppCompatActivity() {
     fun Message(event: TimelineEventWrapper) {
         val menuExpanded = remember { mutableStateOf(false) }
         val deleteDialogOpen = remember { mutableStateOf(false) }
+        val editDialogOpen = remember { mutableStateOf(false) }
         val messageContent = remember { event.event.root.getClearContent().toModel<MessageContent>() }
         val scope = rememberCoroutineScope()
         Row(modifier = Modifier.combinedClickable(
@@ -385,7 +387,10 @@ class RoomActivity : AppCompatActivity() {
             if (deleteDialogOpen.value) {
                 DeleteDialog(event.event, deleteDialogOpen)
             }
-            MessageDropdown(event.event, menuExpanded, deleteDialogOpen)
+            if(editDialogOpen.value) {
+                EditDialog(event.event, editDialogOpen)
+            }
+            MessageDropdown(event.event, menuExpanded, deleteDialogOpen, editDialogOpen)
             event.RenderEvent(modifier = Modifier)
         }
     }
@@ -394,7 +399,8 @@ class RoomActivity : AppCompatActivity() {
     fun MessageDropdown(
         event: TimelineEvent,
         expanded: MutableState<Boolean>,
-        deleteDialogOpen: MutableState<Boolean>
+        deleteDialogOpen: MutableState<Boolean>,
+        editDialogOpen: MutableState<Boolean>,
     ) {
         val clipboardManager = LocalClipboardManager.current
         DropdownMenu(
@@ -420,6 +426,15 @@ class RoomActivity : AppCompatActivity() {
                 enabled = true
             ) {
                 Text("Redact")
+            }
+            DropdownMenuItem(
+                onClick = {
+                    expanded.value = false
+                    editDialogOpen.value = true
+                },
+                enabled = true
+            ) {
+                Text("Edit")
             }
             DropdownMenuItem(
                 onClick = {
@@ -516,6 +531,42 @@ class RoomActivity : AppCompatActivity() {
             dismissButton = {
                 Button(onClick = {
                     deleteDialogOpen.value = false
+                }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    @Composable
+    fun EditDialog(event: TimelineEvent, editDialogOpen: MutableState<Boolean>) {
+        var messageContent by remember { mutableStateOf(event.root.getClearContent()?.toModel<MessageContent>()?.body ?: "") }
+        AlertDialog(
+            onDismissRequest = {
+                editDialogOpen.value = false
+            },
+            title = {
+                Text("Redaction Confirmation")
+            },
+            text = {
+                Column {
+                    Text("Edit Message")
+                    TextField(value = messageContent, onValueChange = {
+                        messageContent = it
+                    })
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    chatRoomState.room.relationService().editTextMessage(event, event.root.getMsgType()!!, newBodyText = messageContent, newBodyAutoMarkdown = true)
+                    editDialogOpen.value = false
+                }) {
+                    Text("Confirm")
+                }
+            },
+            dismissButton = {
+                Button(onClick = {
+                    editDialogOpen.value = false
                 }) {
                     Text("Cancel")
                 }
