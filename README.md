@@ -19,7 +19,7 @@ TODO:
  - [x] Remove redacted events from local timeline
  - [x] Message redacting
  - [x] Message replies
- - [ ] Message editing
+ - [x] Message editing
  - [x] Display message edits
  - [ ] Display reactions
  - [ ] Add reactions
@@ -39,7 +39,7 @@ TODO:
  - [ ] Read receipts
  - [x] Display Read receipts
  - [x] Typing indicator sending
- - [ ] Typing indicator rendering
+ - [x] Typing indicator rendering
 
 Possible features:
  - [ ] Edit redactions

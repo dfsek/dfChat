@@ -250,9 +250,35 @@ class RoomActivity : AppCompatActivity() {
         if (imageUi.value) {
             ImageDialog(imageUi)
         }
+        var typingUsers by remember { mutableStateOf<List<SenderInfo>>(emptyList()) }
+        val lifecycleOwner = LocalLifecycleOwner.current
+        LaunchedEffect(chatRoomState) {
+            chatRoomState.room.getRoomSummaryLive()
+                .observe(lifecycleOwner) {
+                    it.getOrNull()?.let {
+                        typingUsers = it.typingUsers
+                    }
+                }
+        }
 
         Surface {
             Column {
+                if(typingUsers.isNotEmpty()) {
+                    val userText = remember {
+                        if(typingUsers.size == 1) {
+                            typingUsers[0].disambiguatedDisplayName + " is typing..."
+                        } else if(typingUsers.size <= 4) {
+                            typingUsers.joinToString(
+                                separator = ", ",
+                                limit = typingUsers.size - 1,
+                                truncated = " and " + typingUsers.last().disambiguatedDisplayName
+                            ) { it.disambiguatedDisplayName } + " are typing..."
+                        } else {
+                            "Several people are typing..."
+                        }
+                    }
+                    Text(text = userText, fontSize = 11.sp)
+                }
                 imageToSend.let {
                     Row {
                         it.forEach {
