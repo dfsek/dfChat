@@ -26,7 +26,6 @@ import com.dfsek.dfchat.AppState
 import org.matrix.android.sdk.api.session.events.model.getMsgType
 import org.matrix.android.sdk.api.session.room.model.message.MessageType
 import org.matrix.android.sdk.api.session.room.timeline.TimelineEvent
-import org.matrix.android.sdk.api.session.room.timeline.getLastEditNewContent
 
 interface TimelineEventWrapper {
     class Default(override val event: TimelineEvent) : TimelineEventWrapper {
@@ -41,7 +40,7 @@ interface TimelineEventWrapper {
     class Redacted(override val event: TimelineEvent, val redactionEvent: TimelineEvent) : TimelineEventWrapper {
         @Composable
         override fun RenderContent(modifier: Modifier) {
-            val jankyRandom = event.eventId.hashCode() and 1 == 0
+            val jankyRandom = remember { event.eventId.hashCode() and 1 == 0 }
             Row(modifier = modifier) {
                 Text(if (jankyRandom) "[REDACTED]" else "[DATA EXPUNGED]", color = MaterialTheme.colors.error)
             }
