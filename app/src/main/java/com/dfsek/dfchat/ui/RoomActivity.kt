@@ -293,7 +293,7 @@ class RoomActivity : AppCompatActivity() {
                             onMessageSent(input)
                             input = ""
                         }
-                        if(imageToSend.isNotEmpty()) {
+                        if (imageToSend.isNotEmpty()) {
                             Log.d("IMAGES", imageToSend.toString())
                             chatRoomState.room.sendService().sendMedias(
                                 attachments = imageToSend,
@@ -388,7 +388,7 @@ class RoomActivity : AppCompatActivity() {
             if (deleteDialogOpen.value) {
                 DeleteDialog(event, deleteDialogOpen)
             }
-            if(editDialogOpen.value) {
+            if (editDialogOpen.value) {
                 EditDialog(event, editDialogOpen)
             }
             MessageDropdown(event, menuExpanded, deleteDialogOpen, editDialogOpen)
@@ -419,7 +419,7 @@ class RoomActivity : AppCompatActivity() {
             ) {
                 Text("Reply")
             }
-            if(event.canRedact) {
+            if (event.canRedact) {
                 DropdownMenuItem(
                     onClick = {
                         expanded.value = false
@@ -430,7 +430,7 @@ class RoomActivity : AppCompatActivity() {
                     Text("Redact")
                 }
             }
-            if(event.canEditText) {
+            if (event.canEditText) {
                 DropdownMenuItem(
                     onClick = {
                         expanded.value = false
@@ -545,7 +545,13 @@ class RoomActivity : AppCompatActivity() {
 
     @Composable
     fun EditDialog(event: TimelineEventWrapper, editDialogOpen: MutableState<Boolean>) {
-        var messageContent by remember { mutableStateOf(event.event.getLastEditNewContent()?.toModel<MessageContent>()?.body ?: "") }
+        var messageContent by remember {
+            mutableStateOf(
+                event.event.getLastEditNewContent()?.toModel<MessageContent>()?.body
+                    ?: event.event.root.getClearContent()?.toModel<MessageContent>()?.body
+                    ?: ""
+            )
+        }
         AlertDialog(
             onDismissRequest = {
                 editDialogOpen.value = false
@@ -562,7 +568,12 @@ class RoomActivity : AppCompatActivity() {
             },
             confirmButton = {
                 Button(onClick = {
-                    chatRoomState.room.relationService().editTextMessage(event.event, event.event.root.getMsgType()!!, newBodyText = messageContent, newBodyAutoMarkdown = true)
+                    chatRoomState.room.relationService().editTextMessage(
+                        event.event,
+                        event.event.root.getMsgType()!!,
+                        newBodyText = messageContent,
+                        newBodyAutoMarkdown = true
+                    )
                     editDialogOpen.value = false
                 }) {
                     Text("Confirm")
