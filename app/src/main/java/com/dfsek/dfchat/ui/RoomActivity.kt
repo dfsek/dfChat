@@ -55,6 +55,7 @@ import com.dfsek.dfchat.util.vector.multipicker.toContentAttachmentData
 import im.vector.lib.multipicker.MultiPicker
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import org.matrix.android.sdk.api.session.content.ContentAttachmentData
 import org.matrix.android.sdk.api.session.events.model.toModel
 import org.matrix.android.sdk.api.session.getRoom
 import org.matrix.android.sdk.api.session.room.model.message.MessageContent
@@ -68,6 +69,7 @@ import kotlin.math.roundToInt
 
 class RoomActivity : AppCompatActivity() {
     private lateinit var chatRoomState: ChatRoomState
+    private var imageToSend: List<ContentAttachmentData> by mutableStateOf(emptyList())
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -247,6 +249,22 @@ class RoomActivity : AppCompatActivity() {
 
         Surface {
             Column {
+                imageToSend.let {
+                    Row {
+                        it.forEach {
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(it.queryUri)
+                                    .crossfade(true)
+                                    .decoderFactory(BitmapFactoryDecoder.Factory())
+                                    .build(),
+                                contentScale = ContentScale.Fit,
+                                contentDescription = null,
+                                modifier = Modifier.size(64.dp)
+                            )
+                        }
+                    }
+                }
                 chatRoomState.replyTo?.let {
                     Text(
                         text = "re: ${it.getPreviewText().substringBefore("\n")}",
@@ -256,7 +274,6 @@ class RoomActivity : AppCompatActivity() {
                     )
                 }
                 Row(modifier = modifier) {
-
                     IconButton(onClick = {
                         imageUi.value = true
                     }) {
@@ -273,6 +290,15 @@ class RoomActivity : AppCompatActivity() {
                         if (input.trim().isNotEmpty()) {
                             onMessageSent(input)
                             input = ""
+                        }
+                        if(imageToSend.isNotEmpty()) {
+                            Log.d("IMAGES", imageToSend.toString())
+                            chatRoomState.room.sendService().sendMedias(
+                                attachments = imageToSend,
+                                compressBeforeSending = true,
+                                roomIds = emptySet()
+                            )
+                            imageToSend = emptyList()
                         }
                     }) {
                         Text("Submit")
@@ -414,17 +440,10 @@ class RoomActivity : AppCompatActivity() {
         val imagePicker = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.StartActivityForResult(),
             onResult = {
-                val attachments = MultiPicker.get(MultiPicker.MEDIA).getSelectedFiles(this, it.data)
+                imageToSend = MultiPicker.get(MultiPicker.MEDIA).getSelectedFiles(this, it.data)
                     .map {
                         it.toContentAttachmentData()
                     }
-                Log.d("ATTACHMENTS", attachments.toString())
-                chatRoomState.room.sendService().sendMedias(
-                    attachments = attachments,
-                    compressBeforeSending = true,
-                    roomIds = emptySet()
-                )
-                AppState.session!!.syncService().startSync(true)
                 imageDialogOpen.value = false
             }
         )
@@ -435,11 +454,7 @@ class RoomActivity : AppCompatActivity() {
                 imageUri?.let {
                     MultiPicker.get(MultiPicker.CAMERA).getTakenPhoto(this, it)
                         ?.let {
-                            chatRoomState.room.sendService().sendMedia(
-                                attachment = it.toContentAttachmentData(),
-                                compressBeforeSending = true,
-                                roomIds = emptySet()
-                            )
+                            imageToSend = listOf(it.toContentAttachmentData())
                             imageDialogOpen.value = false
                         }
                     imageUri = null
