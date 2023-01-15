@@ -61,7 +61,7 @@ dependencies {
     implementation("androidx.room:room-ktx:$room_version")
 
 
-    implementation("org.matrix.android:matrix-android-sdk2:1.5.11") {
+    implementation("org.matrix.android:matrix-android-sdk2:1.5.18") {
         exclude("com.atlassian.commonmark")
     }
 
