@@ -71,7 +71,7 @@ interface TimelineEventWrapper {
                 Row(modifier = Modifier
                     .padding(PaddingValues(start = 6.dp, end = 6.dp))
                     .fillMaxWidth()
-                    .background(MaterialTheme.colors.primary.copy(alpha = 0.1f))) {
+                    .background(MaterialTheme.colors.primary.copy(alpha = 0.15f))) {
 
                     val lifecycleOwner = LocalLifecycleOwner.current
                     var repliedToEventContent by remember { mutableStateOf<TimelineEvent?>(null) }
