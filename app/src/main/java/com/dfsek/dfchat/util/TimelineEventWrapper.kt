@@ -60,7 +60,7 @@ interface TimelineEventWrapper {
         }
     }
 
-    class Replied(override val event: TimelineEvent, private val repliedTo: String) : TimelineEventWrapper {
+    class Replied(override val event: TimelineEvent, val repliedTo: String) : TimelineEventWrapper {
         @Composable
         override fun RenderContent(modifier: Modifier) {
             Column {

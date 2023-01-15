@@ -46,24 +46,26 @@ import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
 import com.dfsek.dfchat.AppState
 import com.dfsek.dfchat.state.ChatRoomState
-import com.dfsek.dfchat.util.FixedDefaultFlingBehavior
+import com.dfsek.dfchat.util.*
 import com.dfsek.dfchat.util.FixedDefaultFlingBehavior.Companion.fixedFlingBehavior
-import com.dfsek.dfchat.util.RenderMessage
-import com.dfsek.dfchat.util.TimelineEventWrapper
-import com.dfsek.dfchat.util.getPreviewText
 import com.dfsek.dfchat.util.vector.multipicker.toContentAttachmentData
 import im.vector.lib.multipicker.MultiPicker
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import org.matrix.android.sdk.api.session.content.ContentAttachmentData
 import org.matrix.android.sdk.api.session.events.model.getMsgType
+import org.matrix.android.sdk.api.session.events.model.getRelationContent
 import org.matrix.android.sdk.api.session.events.model.toModel
 import org.matrix.android.sdk.api.session.getRoom
+import org.matrix.android.sdk.api.session.room.getTimelineEvent
 import org.matrix.android.sdk.api.session.room.model.message.MessageContent
 import org.matrix.android.sdk.api.session.room.model.message.MessageImageContent
+import org.matrix.android.sdk.api.session.room.model.message.MessageTextContent
+import org.matrix.android.sdk.api.session.room.model.message.MessageType
 import org.matrix.android.sdk.api.session.room.sender.SenderInfo
 import org.matrix.android.sdk.api.session.room.timeline.TimelineEvent
 import org.matrix.android.sdk.api.session.room.timeline.getLastEditNewContent
+import org.matrix.android.sdk.api.session.room.timeline.isReply
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -547,8 +549,8 @@ class RoomActivity : AppCompatActivity() {
     fun EditDialog(event: TimelineEventWrapper, editDialogOpen: MutableState<Boolean>) {
         var messageContent by remember {
             mutableStateOf(
-                event.event.getLastEditNewContent()?.toModel<MessageContent>()?.body
-                    ?: event.event.root.getClearContent()?.toModel<MessageContent>()?.body
+                event.event.getLastEditNewContent()?.toModel<MessageTextContent>()?.removeInReplyFallbacks()
+                    ?: event.event.root.getClearContent()?.toModel<MessageTextContent>()?.removeInReplyFallbacks()
                     ?: ""
             )
         }
@@ -568,12 +570,22 @@ class RoomActivity : AppCompatActivity() {
             },
             confirmButton = {
                 Button(onClick = {
-                    chatRoomState.room.relationService().editTextMessage(
-                        event.event,
-                        event.event.root.getMsgType()!!,
-                        newBodyText = messageContent,
-                        newBodyAutoMarkdown = true
-                    )
+                    if(event is TimelineEventWrapper.Replied) {
+                        chatRoomState.room.getTimelineEvent(event.repliedTo)?.let {
+                            chatRoomState.room.relationService().editReply(
+                                replyToEdit = event.event,
+                                originalTimelineEvent = it,
+                                newBodyText = messageContent
+                            )
+                        }
+                    } else {
+                        chatRoomState.room.relationService().editTextMessage(
+                            event.event,
+                            event.event.root.getMsgType()!!,
+                            newBodyText = messageContent,
+                            newBodyAutoMarkdown = true
+                        )
+                    }
                     editDialogOpen.value = false
                 }) {
                     Text("Confirm")

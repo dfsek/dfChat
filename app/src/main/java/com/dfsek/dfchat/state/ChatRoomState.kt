@@ -9,6 +9,7 @@ import org.matrix.android.sdk.api.session.Session
 import org.matrix.android.sdk.api.session.events.model.getRelationContent
 import org.matrix.android.sdk.api.session.events.model.isEdition
 import org.matrix.android.sdk.api.session.room.Room
+import org.matrix.android.sdk.api.session.room.getTimelineEvent
 import org.matrix.android.sdk.api.session.room.sender.SenderInfo
 import org.matrix.android.sdk.api.session.room.timeline.*
 
@@ -64,6 +65,8 @@ class ChatRoomState(
                 replace[it.getRelationContent()!!.eventId!!] = it
             }
         }
+
+
 
         fun createWrapper(event: TimelineEvent): TimelineEventWrapper =
             if (redactedEventIDs.contains(event.eventId)) TimelineEventWrapper.Redacted(
