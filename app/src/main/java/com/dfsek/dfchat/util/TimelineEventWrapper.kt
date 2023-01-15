@@ -32,7 +32,7 @@ interface TimelineEventWrapper {
         @Composable
         override fun RenderEvent(modifier: Modifier) {
             Row {
-                event.getLastEditNewContent()?.RenderContent()
+                event.getLastEditNewContent()?.RenderContent(modifier = Modifier.weight(1f))
                 Icon(
                     contentDescription = "Edited",
                     imageVector = Icons.Default.Edit,

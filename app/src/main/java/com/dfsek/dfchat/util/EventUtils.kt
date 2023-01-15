@@ -73,7 +73,7 @@ fun Content.RenderContent(modifier: Modifier = Modifier) {
             } ?: Text("Rendering image...")
         }
 
-        else -> Text(formatMessage(this))
+        else -> Text(formatMessage(this), modifier = modifier)
     }
 }
 
