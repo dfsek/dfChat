@@ -23,10 +23,7 @@ import coil.compose.AsyncImage
 import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
 import com.dfsek.dfchat.AppState
-import org.matrix.android.sdk.api.session.events.model.Content
-import org.matrix.android.sdk.api.session.events.model.EventType
 import org.matrix.android.sdk.api.session.events.model.getMsgType
-import org.matrix.android.sdk.api.session.room.getTimelineEvent
 import org.matrix.android.sdk.api.session.room.model.message.MessageType
 import org.matrix.android.sdk.api.session.room.timeline.TimelineEvent
 import org.matrix.android.sdk.api.session.room.timeline.getLastEditNewContent
@@ -35,7 +32,9 @@ interface TimelineEventWrapper {
     class Default(override val event: TimelineEvent) : TimelineEventWrapper {
         @Composable
         override fun RenderContent(modifier: Modifier) {
-            event.RenderMessage(modifier)
+            Row(modifier = modifier) {
+                event.RenderMessage()
+            }
         }
     }
 
@@ -43,20 +42,23 @@ interface TimelineEventWrapper {
         @Composable
         override fun RenderContent(modifier: Modifier) {
             val jankyRandom = event.eventId.hashCode() and 1 == 0
-            Text(if (jankyRandom) "[REDACTED]" else "[DATA EXPUNGED]", color = MaterialTheme.colors.error)
+            Row(modifier = modifier) {
+                Text(if (jankyRandom) "[REDACTED]" else "[DATA EXPUNGED]", color = MaterialTheme.colors.error)
+            }
         }
 
         override val canRedact = false
     }
 
-    class Replaced(override val event: TimelineEvent, val replacedBy: TimelineEvent) : TimelineEventWrapper {
+    class Replaced(override val event: TimelineEvent, val eventWrapper: TimelineEventWrapper, val replacedBy: TimelineEvent) : TimelineEventWrapper {
         @Composable
         override fun RenderContent(modifier: Modifier) {
-            Row {
-                event.getLastEditNewContent()?.RenderContent(modifier = Modifier.weight(1f))
+            Row(modifier = modifier) {
+                eventWrapper.RenderContent(modifier = Modifier.weight(1f))
                 Icon(
                     contentDescription = "Edited",
                     imageVector = Icons.Default.Edit,
+                    modifier = Modifier.align(Alignment.Bottom)
                 )
             }
         }
@@ -65,7 +67,7 @@ interface TimelineEventWrapper {
     class Replied(override val event: TimelineEvent, val repliedTo: String) : TimelineEventWrapper {
         @Composable
         override fun RenderContent(modifier: Modifier) {
-            Column {
+            Column(modifier = modifier) {
                 Row(modifier = Modifier
                     .padding(PaddingValues(start = 6.dp, end = 6.dp))
                     .fillMaxWidth()
@@ -90,11 +92,11 @@ interface TimelineEventWrapper {
                                 fontSize = 14.sp,
                                 style = TextStyle(fontWeight = FontWeight.Bold)
                             )
-                            it.RenderMessage(modifier)
+                            it.RenderMessage()
                         }
                     } ?: Text("Rendering event...")
                 }
-                event.RenderMessage(modifier)
+                event.RenderMessage()
             }
         }
     }
@@ -103,8 +105,8 @@ interface TimelineEventWrapper {
 
     @Composable
     fun RenderEvent(modifier: Modifier) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            RenderContent(modifier)
+        Column(modifier = modifier.fillMaxWidth()) {
+            RenderContent(Modifier)
             RenderReadReceipts(modifier = Modifier.align(Alignment.End))
         }
     }

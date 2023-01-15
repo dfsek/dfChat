@@ -68,13 +68,14 @@ class ChatRoomState(
 
 
 
-        fun createWrapper(event: TimelineEvent): TimelineEventWrapper =
+        fun createWrapper(event: TimelineEvent, ignoreReplace: Boolean = false): TimelineEventWrapper =
             if (redactedEventIDs.contains(event.eventId)) TimelineEventWrapper.Redacted(
                 event,
                 redactedBy[event.eventId]!!
             )
-            else if (replace.containsKey(event.eventId)) TimelineEventWrapper.Replaced(
+            else if (!ignoreReplace && replace.containsKey(event.eventId)) TimelineEventWrapper.Replaced(
                 event,
+                createWrapper(event, true),
                 replace[event.eventId]!!
             )
             else if(event.isReply()) TimelineEventWrapper.Replied(
