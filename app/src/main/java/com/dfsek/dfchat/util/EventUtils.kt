@@ -8,7 +8,6 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -27,9 +26,8 @@ import org.matrix.android.sdk.api.session.room.model.message.MessageImageContent
 import org.matrix.android.sdk.api.session.room.model.message.MessageTextContent
 import org.matrix.android.sdk.api.session.room.model.message.MessageType
 import org.matrix.android.sdk.api.session.room.timeline.TimelineEvent
-import org.matrix.android.sdk.api.session.room.timeline.getTextDisplayableContent
+import org.matrix.android.sdk.api.session.room.timeline.getLastEditNewContent
 import org.matrix.android.sdk.api.util.ContentUtils
-import org.matrix.android.sdk.api.util.TextContent
 import java.io.File
 
 @Composable
@@ -89,7 +87,7 @@ private fun TimelineEvent.RenderMessageEvent(modifier: Modifier = Modifier) {
 
 fun TimelineEvent.getPreviewText(cut: Boolean = true): String {
     val fullText = when (root.getClearType()) {
-        EventType.MESSAGE -> formatMessage(root.getClearContent()!!)
+        EventType.MESSAGE -> formatMessage(getLatestContent()!!)
         EventType.ENCRYPTED -> "Encrypted message (haven't received keys!)"
 
         else -> "dfChat unimplemented event ${root.getClearType()}"
@@ -111,3 +109,8 @@ private fun formatMessage(timelineEvent: Content): String {
 fun MessageTextContent.removeInReplyFallbacks(): String {
     return formattedBody?.let { ContentUtils.extractUsefulTextFromHtmlReply(it) } ?: ContentUtils.extractUsefulTextFromReply(body)
 }
+
+fun TimelineEvent.getLatestContent(): Content? = getLastEditNewContent()
+    ?: root.getClearContent()
+
+fun TimelineEvent.getLatestTextCleaned() = getLatestContent()?.toModel<MessageTextContent>()?.removeInReplyFallbacks()

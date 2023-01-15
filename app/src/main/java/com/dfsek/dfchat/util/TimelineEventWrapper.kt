@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -25,6 +26,7 @@ import com.dfsek.dfchat.AppState
 import org.matrix.android.sdk.api.session.events.model.Content
 import org.matrix.android.sdk.api.session.events.model.EventType
 import org.matrix.android.sdk.api.session.events.model.getMsgType
+import org.matrix.android.sdk.api.session.room.getTimelineEvent
 import org.matrix.android.sdk.api.session.room.model.message.MessageType
 import org.matrix.android.sdk.api.session.room.timeline.TimelineEvent
 import org.matrix.android.sdk.api.session.room.timeline.getLastEditNewContent
@@ -69,23 +71,26 @@ interface TimelineEventWrapper {
                     .fillMaxWidth()
                     .background(MaterialTheme.colors.primary.copy(alpha = 0.1f))) {
 
-                    var repliedToEventContent by remember { mutableStateOf<Pair<Content, String>?>(null) }
+                    val lifecycleOwner = LocalLifecycleOwner.current
+                    var repliedToEventContent by remember { mutableStateOf<TimelineEvent?>(null) }
                     LaunchedEffect(repliedTo) {
                         if(repliedTo.startsWith("\$local")) return@LaunchedEffect
-                        val event = AppState.session!!.eventService().getEvent(event.roomId, repliedTo)
-                        AppState.session!!.userService().getUser(event.senderId!!)?.displayName?.let {
-                            repliedToEventContent = Pair(event.getClearContent()!!, it)
-                        }
+                        AppState.session!!.roomService().getRoom(event.roomId)?.timelineService()?.getTimelineEventLive(repliedTo)
+                            ?.observe(lifecycleOwner) {
+                                it.getOrNull()?.let {
+                                    repliedToEventContent = it
+                                }
+                            }
                     }
 
                     repliedToEventContent?.let {
                         Column(modifier = Modifier.padding(PaddingValues(start = 6.dp, end = 6.dp, bottom = 6.dp))) {
                             Text(
-                                it.second,
+                                it.senderInfo.disambiguatedDisplayName,
                                 fontSize = 14.sp,
                                 style = TextStyle(fontWeight = FontWeight.Bold)
                             )
-                            it.first.RenderContent(modifier)
+                            it.RenderMessage(modifier)
                         }
                     } ?: Text("Rendering event...")
                 }

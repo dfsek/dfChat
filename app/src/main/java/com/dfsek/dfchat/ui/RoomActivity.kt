@@ -270,8 +270,9 @@ class RoomActivity : AppCompatActivity() {
                     }
                 }
                 chatRoomState.replyTo?.let {
+                    val preview = remember { it.getPreviewText(true) }
                     Text(
-                        text = "re: ${it.getPreviewText().substringBefore("\n")}",
+                        text = "re: $preview",
                         modifier = Modifier.clickable {
                             chatRoomState.replyTo = null
                         }.fillMaxWidth()
@@ -548,11 +549,7 @@ class RoomActivity : AppCompatActivity() {
     @Composable
     fun EditDialog(event: TimelineEventWrapper, editDialogOpen: MutableState<Boolean>) {
         var messageContent by remember {
-            mutableStateOf(
-                event.event.getLastEditNewContent()?.toModel<MessageTextContent>()?.removeInReplyFallbacks()
-                    ?: event.event.root.getClearContent()?.toModel<MessageTextContent>()?.removeInReplyFallbacks()
-                    ?: ""
-            )
+            mutableStateOf(event.event.getLatestTextCleaned() ?: "")
         }
         AlertDialog(
             onDismissRequest = {
