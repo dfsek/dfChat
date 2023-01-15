@@ -82,12 +82,12 @@ fun Content.RenderContent(modifier: Modifier = Modifier) {
 
 @Composable
 private fun TimelineEvent.RenderMessageEvent(modifier: Modifier = Modifier) {
-    root.getClearContent()?.RenderContent(modifier)
+    getLatestContent()?.RenderContent(modifier)
 }
 
 fun TimelineEvent.getPreviewText(cut: Boolean = true): String {
     val fullText = when (root.getClearType()) {
-        EventType.MESSAGE -> formatMessage(getLatestContent()!!)
+        EventType.MESSAGE -> getLatestContent()!!.toModel<MessageContent>()?.body ?: ""
         EventType.ENCRYPTED -> "Encrypted message (haven't received keys!)"
 
         else -> "dfChat unimplemented event ${root.getClearType()}"
