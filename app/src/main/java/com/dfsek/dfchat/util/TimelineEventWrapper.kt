@@ -2,6 +2,7 @@ package com.dfsek.dfchat.util
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
@@ -25,38 +26,22 @@ import org.matrix.android.sdk.api.session.room.timeline.getLastEditNewContent
 interface TimelineEventWrapper {
     class Default(override val event: TimelineEvent) : TimelineEventWrapper {
         @Composable
-        override fun RenderEvent(modifier: Modifier) {
-            Column {
-                event.RenderMessage(modifier)
-                Row {
-                    event.readReceipts.forEach {
-                        AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(getAvatarUrl(it.roomMember.avatarUrl, 18))
-                                .crossfade(true)
-                                .decoderFactory(BitmapFactoryDecoder.Factory())
-                                .build(),
-                            contentScale = ContentScale.Fit,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp).clip(CircleShape)
-                        )
-                    }
-                }
-            }
+        override fun RenderContent(modifier: Modifier) {
+            event.RenderMessage(modifier)
         }
     }
 
     class Redacted(override val event: TimelineEvent, val redactionEvent: TimelineEvent) : TimelineEventWrapper {
         @Composable
-        override fun RenderEvent(modifier: Modifier) {
+        override fun RenderContent(modifier: Modifier) {
             val jankyRandom = event.eventId.hashCode() and 1 == 0
-            Text(if(jankyRandom) "[REDACTED]" else "[DATA EXPUNGED]", color = MaterialTheme.colors.error)
+            Text(if (jankyRandom) "[REDACTED]" else "[DATA EXPUNGED]", color = MaterialTheme.colors.error)
         }
     }
 
     class Replaced(override val event: TimelineEvent, val replacedBy: TimelineEvent) : TimelineEventWrapper {
         @Composable
-        override fun RenderEvent(modifier: Modifier) {
+        override fun RenderContent(modifier: Modifier) {
             Row {
                 event.getLastEditNewContent()?.RenderContent(modifier = Modifier.weight(1f))
                 Icon(
@@ -71,5 +56,31 @@ interface TimelineEventWrapper {
     val event: TimelineEvent
 
     @Composable
-    fun RenderEvent(modifier: Modifier)
+    fun RenderEvent(modifier: Modifier) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            RenderContent(modifier)
+            RenderReadReceipts(modifier = Modifier.align(Alignment.End))
+        }
+    }
+
+    @Composable
+    fun RenderContent(modifier: Modifier)
+
+    @Composable
+    fun RenderReadReceipts(modifier: Modifier) {
+        Row(modifier) {
+            event.readReceipts.forEach {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(getAvatarUrl(it.roomMember.avatarUrl, 18))
+                        .crossfade(true)
+                        .decoderFactory(BitmapFactoryDecoder.Factory())
+                        .build(),
+                    contentScale = ContentScale.Fit,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp).clip(CircleShape)
+                )
+            }
+        }
+    }
 }
