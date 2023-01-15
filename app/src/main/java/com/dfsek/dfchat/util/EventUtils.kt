@@ -44,13 +44,13 @@ fun TimelineEvent.RenderMessage(modifier: Modifier = Modifier): Unit = when (roo
 fun Content.RenderContent(modifier: Modifier = Modifier) {
     val messageContent = toModel<MessageContent>() ?: return
     when (messageContent.msgType) {
-        "m.text" -> RichTextThemeIntegration(contentColor = { MaterialTheme.colors.onBackground }) {
+        MessageType.MSGTYPE_TEXT -> RichTextThemeIntegration(contentColor = { MaterialTheme.colors.onBackground }) {
             RichText(modifier = modifier) {
                 Markdown(content = formatMessage(this@RenderContent))
             }
         }
 
-        "m.image" -> {
+        MessageType.MSGTYPE_IMAGE -> {
             val imageContent = toModel<MessageImageContent>() ?: return
             Log.d("IMAGE CONTENT", imageContent.toString())
 

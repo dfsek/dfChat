@@ -23,6 +23,9 @@ import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
 import com.dfsek.dfchat.AppState
 import org.matrix.android.sdk.api.session.events.model.Content
+import org.matrix.android.sdk.api.session.events.model.EventType
+import org.matrix.android.sdk.api.session.events.model.getMsgType
+import org.matrix.android.sdk.api.session.room.model.message.MessageType
 import org.matrix.android.sdk.api.session.room.timeline.TimelineEvent
 import org.matrix.android.sdk.api.session.room.timeline.getLastEditNewContent
 
@@ -40,6 +43,8 @@ interface TimelineEventWrapper {
             val jankyRandom = event.eventId.hashCode() and 1 == 0
             Text(if (jankyRandom) "[REDACTED]" else "[DATA EXPUNGED]", color = MaterialTheme.colors.error)
         }
+
+        override val canRedact = false
     }
 
     class Replaced(override val event: TimelineEvent, val replacedBy: TimelineEvent) : TimelineEventWrapper {
@@ -98,6 +103,15 @@ interface TimelineEventWrapper {
             RenderReadReceipts(modifier = Modifier.align(Alignment.End))
         }
     }
+
+    val canRedact
+        get() = isMine
+
+    val canEditText
+        get() = event.root.getMsgType() == MessageType.MSGTYPE_TEXT && isMine
+
+    val isMine
+        get() = event.senderInfo.userId == AppState.session!!.myUserId
 
     @Composable
     fun RenderContent(modifier: Modifier)

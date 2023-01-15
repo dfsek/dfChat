@@ -63,6 +63,7 @@ import org.matrix.android.sdk.api.session.room.model.message.MessageContent
 import org.matrix.android.sdk.api.session.room.model.message.MessageImageContent
 import org.matrix.android.sdk.api.session.room.sender.SenderInfo
 import org.matrix.android.sdk.api.session.room.timeline.TimelineEvent
+import org.matrix.android.sdk.api.session.room.timeline.getLastEditNewContent
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -385,19 +386,19 @@ class RoomActivity : AppCompatActivity() {
             }
         ).fillMaxWidth()) {
             if (deleteDialogOpen.value) {
-                DeleteDialog(event.event, deleteDialogOpen)
+                DeleteDialog(event, deleteDialogOpen)
             }
             if(editDialogOpen.value) {
-                EditDialog(event.event, editDialogOpen)
+                EditDialog(event, editDialogOpen)
             }
-            MessageDropdown(event.event, menuExpanded, deleteDialogOpen, editDialogOpen)
+            MessageDropdown(event, menuExpanded, deleteDialogOpen, editDialogOpen)
             event.RenderEvent(modifier = Modifier)
         }
     }
 
     @Composable
     fun MessageDropdown(
-        event: TimelineEvent,
+        event: TimelineEventWrapper,
         expanded: MutableState<Boolean>,
         deleteDialogOpen: MutableState<Boolean>,
         editDialogOpen: MutableState<Boolean>,
@@ -411,35 +412,39 @@ class RoomActivity : AppCompatActivity() {
         ) {
             DropdownMenuItem(
                 onClick = {
-                    chatRoomState.replyTo = event
+                    chatRoomState.replyTo = event.event
                     expanded.value = false
                 },
                 enabled = true
             ) {
                 Text("Reply")
             }
-            DropdownMenuItem(
-                onClick = {
-                    expanded.value = false
-                    deleteDialogOpen.value = true
-                },
-                enabled = true
-            ) {
-                Text("Redact")
+            if(event.canRedact) {
+                DropdownMenuItem(
+                    onClick = {
+                        expanded.value = false
+                        deleteDialogOpen.value = true
+                    },
+                    enabled = true
+                ) {
+                    Text("Redact")
+                }
+            }
+            if(event.canEditText) {
+                DropdownMenuItem(
+                    onClick = {
+                        expanded.value = false
+                        editDialogOpen.value = true
+                    },
+                    enabled = true
+                ) {
+                    Text("Edit")
+                }
             }
             DropdownMenuItem(
                 onClick = {
                     expanded.value = false
-                    editDialogOpen.value = true
-                },
-                enabled = true
-            ) {
-                Text("Edit")
-            }
-            DropdownMenuItem(
-                onClick = {
-                    expanded.value = false
-                    clipboardManager.setText(AnnotatedString(event.getPreviewText(false)))
+                    clipboardManager.setText(AnnotatedString(event.event.getPreviewText(false)))
                 },
                 enabled = true
             ) {
@@ -506,7 +511,7 @@ class RoomActivity : AppCompatActivity() {
     }
 
     @Composable
-    fun DeleteDialog(event: TimelineEvent, deleteDialogOpen: MutableState<Boolean>) {
+    fun DeleteDialog(event: TimelineEventWrapper, deleteDialogOpen: MutableState<Boolean>) {
         AlertDialog(
             onDismissRequest = {
                 deleteDialogOpen.value = false
@@ -517,12 +522,12 @@ class RoomActivity : AppCompatActivity() {
             text = {
                 Column {
                     Text("Are you sure you want to redact this event?")
-                    event.RenderMessage()
+                    event.RenderEvent(Modifier)
                 }
             },
             confirmButton = {
                 Button(onClick = {
-                    chatRoomState.redact(event)
+                    chatRoomState.redact(event.event)
                     deleteDialogOpen.value = false
                 }) {
                     Text("Confirm")
@@ -539,18 +544,17 @@ class RoomActivity : AppCompatActivity() {
     }
 
     @Composable
-    fun EditDialog(event: TimelineEvent, editDialogOpen: MutableState<Boolean>) {
-        var messageContent by remember { mutableStateOf(event.root.getClearContent()?.toModel<MessageContent>()?.body ?: "") }
+    fun EditDialog(event: TimelineEventWrapper, editDialogOpen: MutableState<Boolean>) {
+        var messageContent by remember { mutableStateOf(event.event.getLastEditNewContent()?.toModel<MessageContent>()?.body ?: "") }
         AlertDialog(
             onDismissRequest = {
                 editDialogOpen.value = false
             },
             title = {
-                Text("Redaction Confirmation")
+                Text("Edit Message")
             },
             text = {
                 Column {
-                    Text("Edit Message")
                     TextField(value = messageContent, onValueChange = {
                         messageContent = it
                     })
@@ -558,7 +562,7 @@ class RoomActivity : AppCompatActivity() {
             },
             confirmButton = {
                 Button(onClick = {
-                    chatRoomState.room.relationService().editTextMessage(event, event.root.getMsgType()!!, newBodyText = messageContent, newBodyAutoMarkdown = true)
+                    chatRoomState.room.relationService().editTextMessage(event.event, event.event.root.getMsgType()!!, newBodyText = messageContent, newBodyAutoMarkdown = true)
                     editDialogOpen.value = false
                 }) {
                     Text("Confirm")
