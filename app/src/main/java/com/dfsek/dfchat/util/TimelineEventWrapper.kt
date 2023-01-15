@@ -1,27 +1,31 @@
 package com.dfsek.dfchat.util
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
+import com.dfsek.dfchat.AppState
+import org.matrix.android.sdk.api.session.events.model.Content
+import org.matrix.android.sdk.api.session.events.model.Event
+import org.matrix.android.sdk.api.session.events.model.toContent
 import org.matrix.android.sdk.api.session.room.timeline.TimelineEvent
 import org.matrix.android.sdk.api.session.room.timeline.getLastEditNewContent
+import org.matrix.android.sdk.api.session.room.timeline.getRelationContent
 
 interface TimelineEventWrapper {
     class Default(override val event: TimelineEvent) : TimelineEventWrapper {
@@ -50,7 +54,40 @@ interface TimelineEventWrapper {
                 )
             }
         }
+    }
 
+    class Replied(override val event: TimelineEvent, private val repliedTo: String) : TimelineEventWrapper {
+        @Composable
+        override fun RenderContent(modifier: Modifier) {
+            Column {
+                Row(modifier = Modifier
+                    .padding(PaddingValues(start = 6.dp, end = 6.dp))
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colors.primary.copy(alpha = 0.1f))) {
+
+                    var repliedToEventContent by remember { mutableStateOf<Pair<Content, String>?>(null) }
+                    LaunchedEffect(repliedTo) {
+                        if(repliedTo.startsWith("\$local")) return@LaunchedEffect
+                        val event = AppState.session!!.eventService().getEvent(event.roomId, repliedTo)
+                        AppState.session!!.userService().getUser(event.senderId!!)?.displayName?.let {
+                            repliedToEventContent = Pair(event.getClearContent()!!, it)
+                        }
+                    }
+
+                    repliedToEventContent?.let {
+                        Column(modifier = Modifier.padding(PaddingValues(start = 6.dp, end = 6.dp, bottom = 6.dp))) {
+                            Text(
+                                it.second,
+                                fontSize = 14.sp,
+                                style = TextStyle(fontWeight = FontWeight.Bold)
+                            )
+                            it.first.RenderContent(modifier)
+                        }
+                    } ?: Text("Rendering event...")
+                }
+                event.RenderMessage(modifier)
+            }
+        }
     }
 
     val event: TimelineEvent

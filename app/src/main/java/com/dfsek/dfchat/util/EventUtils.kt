@@ -24,7 +24,12 @@ import org.matrix.android.sdk.api.session.events.model.EventType
 import org.matrix.android.sdk.api.session.events.model.toModel
 import org.matrix.android.sdk.api.session.room.model.message.MessageContent
 import org.matrix.android.sdk.api.session.room.model.message.MessageImageContent
+import org.matrix.android.sdk.api.session.room.model.message.MessageTextContent
+import org.matrix.android.sdk.api.session.room.model.message.MessageType
 import org.matrix.android.sdk.api.session.room.timeline.TimelineEvent
+import org.matrix.android.sdk.api.session.room.timeline.getTextDisplayableContent
+import org.matrix.android.sdk.api.util.ContentUtils
+import org.matrix.android.sdk.api.util.TextContent
 import java.io.File
 
 @Composable
@@ -97,6 +102,12 @@ fun TimelineEvent.getPreviewText(cut: Boolean = true): String {
 }
 
 private fun formatMessage(timelineEvent: Content): String {
-    val messageContent = timelineEvent.toModel<MessageContent>() ?: return ""
-    return messageContent.body
+    val messageContent = timelineEvent.toModel<MessageTextContent>()
+        ?: return timelineEvent.toModel<MessageContent>()?.body
+            ?: return ""
+    return messageContent.removeInReplyFallbacks()
+}
+
+fun MessageTextContent.removeInReplyFallbacks(): String {
+    return formattedBody?.let { ContentUtils.extractUsefulTextFromHtmlReply(it) } ?: ContentUtils.extractUsefulTextFromReply(body)
 }

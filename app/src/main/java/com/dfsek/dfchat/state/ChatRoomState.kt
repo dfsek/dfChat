@@ -1,23 +1,16 @@
 package com.dfsek.dfchat.state
 
-import android.content.Context
-import android.graphics.BitmapFactory
-import android.graphics.BitmapFactory.Options
-import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.*
 import androidx.lifecycle.LifecycleOwner
 import com.dfsek.dfchat.util.TimelineEventWrapper
 import com.dfsek.dfchat.util.getAvatarUrl
 import org.matrix.android.sdk.api.session.Session
-import org.matrix.android.sdk.api.session.content.ContentAttachmentData
+import org.matrix.android.sdk.api.session.events.model.getRelationContent
 import org.matrix.android.sdk.api.session.events.model.isEdition
 import org.matrix.android.sdk.api.session.room.Room
 import org.matrix.android.sdk.api.session.room.sender.SenderInfo
-import org.matrix.android.sdk.api.session.room.timeline.Timeline
-import org.matrix.android.sdk.api.session.room.timeline.TimelineEvent
-import org.matrix.android.sdk.api.session.room.timeline.TimelineSettings
-import org.matrix.android.sdk.api.session.room.timeline.getRelationContent
+import org.matrix.android.sdk.api.session.room.timeline.*
 
 class ChatRoomState(
     val room: Room,
@@ -80,6 +73,10 @@ class ChatRoomState(
             else if (replace.containsKey(event.eventId)) TimelineEventWrapper.Replaced(
                 event,
                 replace[event.eventId]!!
+            )
+            else if(event.isReply()) TimelineEventWrapper.Replied(
+                event,
+                event.root.getRelationContent()!!.inReplyTo!!.eventId!!
             )
             else TimelineEventWrapper.Default(event)
 
