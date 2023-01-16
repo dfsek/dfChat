@@ -32,7 +32,7 @@ abstract class ComposeFixingClassVisitorFactory :
                 exceptions: Array<out String>?
             ): MethodVisitor {
                 val s = super.visitMethod(access, name, descriptor, signature, exceptions)
-                /*if(name == "invokeSuspend") {
+                if(name == "invokeSuspend") {
                     println("MODIFYING METHOD: $name")
                     return object : MethodVisitor(Opcodes.ASM9, s) {
                         override fun visitInsn(opcode: Int) {
@@ -49,13 +49,12 @@ abstract class ComposeFixingClassVisitorFactory :
                     }
                 }
 
-
-                else */return s
+                else return s
             }
         }
     }
 
     override fun isInstrumentable(classData: ClassData): Boolean {
-        return classData.className.endsWith("NamelessClass_1")
+        return classData.className =="androidx.compose.foundation.text.TextFieldCursorKt\$cursor\$1\$1"
     }
 }
