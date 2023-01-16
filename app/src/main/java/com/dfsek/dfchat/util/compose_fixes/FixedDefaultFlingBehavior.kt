@@ -1,4 +1,4 @@
-package com.dfsek.dfchat.util
+package com.dfsek.dfchat.util.compose_fixes
 
 import androidx.compose.animation.core.AnimationState
 import androidx.compose.animation.core.DecayAnimationSpec
