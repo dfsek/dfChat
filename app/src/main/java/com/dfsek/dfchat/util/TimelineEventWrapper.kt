@@ -73,7 +73,7 @@ interface TimelineEventWrapper {
                     .background(MaterialTheme.colors.primary.copy(alpha = 0.15f))) {
 
                     val lifecycleOwner = LocalLifecycleOwner.current
-                    var repliedToEventContent by remember { mutableStateOf<TimelineEvent?>(null) }
+                    var repliedToEventContent by remember(repliedTo) { mutableStateOf<TimelineEvent?>(null) }
                     LaunchedEffect(repliedTo) {
                         if(repliedTo.startsWith("\$local")) return@LaunchedEffect
                         AppState.session!!.roomService().getRoom(event.roomId)?.timelineService()?.getTimelineEventLive(repliedTo)

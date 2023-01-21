@@ -106,11 +106,8 @@ private fun formatMessage(timelineEvent: Content): String {
     return messageContent.removeInReplyFallbacks()
 }
 
-fun MessageTextContent.removeInReplyFallbacks(): String {
-    return formattedBody?.let { ContentUtils.extractUsefulTextFromHtmlReply(it) } ?: ContentUtils.extractUsefulTextFromReply(body)
-}
+fun MessageTextContent.removeInReplyFallbacks() = ContentUtils.extractUsefulTextFromReply(body)
 
-fun TimelineEvent.getLatestContent(): Content? = getLastEditNewContent()
-    ?: root.getClearContent()
+fun TimelineEvent.getLatestContent(): Content? = getLastEditNewContent() ?: root.getClearContent()
 
 fun TimelineEvent.getLatestTextCleaned() = getLatestContent()?.toModel<MessageTextContent>()?.removeInReplyFallbacks()
