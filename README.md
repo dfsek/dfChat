@@ -24,7 +24,7 @@ TODO:
  - [ ] Display reactions
  - [ ] Add reactions
  - [ ] Type emoji with `:`
- - [ ] Special rendering for replies
+ - [x] Special rendering for replies
  - [x] Copy message text
  - [ ] Select message text
  - [x] Cross Signing
@@ -40,6 +40,7 @@ TODO:
  - [x] Display Read receipts
  - [x] Typing indicator sending
  - [x] Typing indicator rendering
+ - [ ] Message timestamps
 
 Possible features:
  - [ ] Edit redactions
